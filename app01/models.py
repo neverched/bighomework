@@ -3,8 +3,61 @@ from django.db import models
 
 # Create your models here.
 class User(models.Model):
-    id = models.AutoField(primary_key=True)
+    username = models.CharField(max_length=128, unique=True)
+    email = models.EmailField(unique=True)
+    password = models.CharField(max_length=256, default="")
+    gender = models.IntegerField(default=0)
+    intro = models.CharField(max_length=256, default="")
+    organization = models.CharField(max_length=50, verbose_name="所属组织", default="")
+    destination = models.CharField(max_length=256, default="")
+    job = models.CharField(max_length=256, default="")
+    followers = models.IntegerField(default=0, verbose_name="粉丝数")
+    like = models.IntegerField(default=0, verbose_name="点赞数")
+    tags = models.CharField(max_length=256, default="")
 
+
+class Activities(models.Model):
+    hosts = models.ForeignKey("User", on_delete=models.CASCADE)
+    type = models.CharField(max_length=50)
+    create_time = models.DateField(auto_now=True)
+    programs = models.CharField(max_length=256)
+
+
+class Notices(models.Model):
+    hosts = models.ForeignKey("User", on_delete=models.CASCADE)
+    notice_type = models.CharField(max_length=256)
+    notice_id = models.IntegerField(verbose_name="通知内容（评论等）的ID")
+    notice_title = models.CharField(max_length=256)
+    create_time = models.DateField(auto_now=True)
+
+
+class Collects(models.Model):
+    hosts = models.ForeignKey("User", on_delete=models.CASCADE)
+    collect_type = models.CharField(max_length=256)
+    collect_id = models.IntegerField(verbose_name="通知内容（评论等）的ID")
+    collect_title = models.CharField(max_length=256)
+    create_time = models.DateField(auto_now=True)
+
+
+class Follows(models.Model):
+    following = models.ForeignKey("User", on_delete=models.CASCADE, verbose_name="关注者")
+    # followed = models.ForeignKey("User", on_delete=models.CASCADE, verbose_name="被关注者")
+    followed_type = models.CharField(max_length=50)
+    followed_id = models.IntegerField(verbose_name="关注的人/学习空间id")
+    create_time = models.DateField(auto_now=True)
+
+
+class Mails(models.Model):
+    texts = models.TextField()
+    user1 = models.ForeignKey("User", on_delete=models.CASCADE)
+    user2 = models.IntegerField()
+    texts_time = models.DateField(auto_now=True)
+
+
+class Likes(models.Model):
+    hosts = models.ForeignKey("User", on_delete=models.CASCADE)
+    like_type = models.CharField(max_length=256)
+    liked_id = models.IntegerField()
 
 class StudySpaces(models.Model):
     id = models.AutoField(primary_key=True)

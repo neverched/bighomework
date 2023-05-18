@@ -1,16 +1,14 @@
+import datetime
 import json
-
 import re
-from django.http import JsonResponse
-from django.shortcuts import render
 
-import requests
+from django.http import JsonResponse
 # Create your views here.
 from django.views.decorators.csrf import csrf_exempt
-
-from app01.models import User, Mails
-from tools.emails import *
 from pytz import utc
+
+from app01.models import User
+from tools.emails import *
 
 
 @csrf_exempt
@@ -65,15 +63,41 @@ def user_confirm(request):
         try:
             confirm = ConfirmString.objects.get(code=code)
         except:
-            return JsonResponse({'error': 2002, 'msg': "没有确认邮件"})
+            return JsonResponse({'error': 2002, 'msg': "验证码错误"})
         c_time = confirm.c_time.replace(tzinfo=utc)
         now = datetime.datetime.now().replace(tzinfo=utc)
-        if now > c_time + datetime.timedelta(settings.CONFIRM_DAYS):
+        if now > c_time + datetime.timedelta(3):
             confirm.user.delete()
             return JsonResponse({'error': 2003, 'msg': "确认邮件已过期"})
         else:
-            confirm.user.has_confirmed = True
+
+            confirm.user.confirmed = True
             confirm.user.save()
             confirm.delete()
             return JsonResponse({'error': 1, 'msg': "验证成功"})
     return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+
+@csrf_exempt
+def login(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')  # 获取请求数据
+        password = request.POST.get('password')
+        if request.session.get('username') == username:
+            return JsonResponse({'error': 1009, 'msg': "已经登录"})
+        user = User.objects.get(username=username)
+        if user.password == password:  # 判断请求的密码是否与数据库存储的密码相同
+            if not user.confirmed:
+                return JsonResponse({'error': 1010, 'msg': "未确认"})
+            request.session['username'] = username  # 密码正确则将用户名存储于session（django用于存储登录信息的数据库位置）
+            return JsonResponse({'error': 1, 'msg': "登录成功"})
+        else:
+            return JsonResponse({'error': 1002, 'msg': "密码错误"})
+    else:
+        return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+
+@csrf_exempt
+def logout(request):
+    request.session.flush()
+    return JsonResponse({'errno': 0, 'msg': "注销成功"})

@@ -12,6 +12,7 @@ class User(models.Model):
     destination = models.CharField(max_length=256, default="")
     job = models.CharField(max_length=256, default="")
     followers = models.IntegerField(default=0, verbose_name="粉丝数")
+    followings = models.IntegerField(default=0, verbose_name="关注数")
     like = models.IntegerField(default=0, verbose_name="点赞数")
     tags = models.CharField(max_length=256, default="")
     confirmed = models.BooleanField(default=False)

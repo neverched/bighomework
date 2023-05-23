@@ -434,7 +434,7 @@ def get_collects_exercises(request, uid):
 def get_followings(request, uid):
     if request.method == 'GET':
         uid = int(uid)
-        follows = Follows.objects.filter(followings=uid, followed_type='people')
+        follows = Follows.objects.filter(following=uid, followed_type='people')
         user_need = []
 
         for follow in follows:
@@ -478,14 +478,28 @@ def follow_people(request, uid):
         uid = int(uid)
         if uid == user_id:
             return JsonResponse({'error': 1013, 'msg': "不能关注自己哦"})
+
         fan = User.objects.get(id=user_id)
         follow = User.objects.get(id=uid)
-        fan.followings += 1
-        follow.followers += 1
+        try:
+            following = Follows.objects.get(following=uid, followed_id=user_id)
+        except:
+            fan.followings += 1
+            follow.followers += 1
 
-        new_follow = Follows()
-        new_follow.followed_type = 'people'
-        new_follow.followed_id = uid
-        new_follow.following = user_id
-        return JsonResponse({'error': 1, 'msg': '关注成功'})
+            new_follow = Follows()
+            new_follow.followed_type = 'people'
+            new_follow.followed_id = user_id
+            new_follow.following = follow
+            new_follow.save()
+
+            return JsonResponse({'error': 1, 'msg': '关注成功'})
+
+        fan.followings -= 1
+        follow.followers -= 1
+        follow.delete()
+        follow.id = uid
+        follow.save()
+        return JsonResponse({'error': 1, 'msg': '取消关注成功'})
+
     return JsonResponse({'error': 1001, 'msg': "请求方式错误"})

@@ -38,6 +38,7 @@ class Activities(models.Model):
     type = models.CharField(max_length=50)
     create_time = models.DateField(auto_now=True)
     programs = models.CharField(max_length=256)
+    t_id = models.IntegerField(default=0)
 
 
 class Notices(models.Model):

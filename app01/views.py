@@ -133,12 +133,13 @@ def change_password(request):
 @csrf_exempt
 def get_info(request, uid):
     if request.method == 'GET':
+        uid = int(uid)
         try:
             user = User.objects.get(id=uid)
         except:
             return JsonResponse({'error': 1011, 'msg': "没有此用户"})
         return JsonResponse(
-            {'error': 1, 'msg': '更新信息成功', 'username': user.username, 'gender': user.gender, 'tags': user.tags,
+            {'error': 1, 'msg': '查找信息成功', 'username': user.username, 'gender': user.gender, 'tags': user.tags,
              'destination': user.destination,
              'job': user.job, 'organization': user.organization, 'intro': user.intro,
              'followers': user.followers, 'followings': user.followings, 'like': user.like})
@@ -157,7 +158,11 @@ def edit_info(request, uid):
         organization = json.loads(request.body)['organization']
         intro = json.loads(request.body)['intro']
 
-        if request.session['uid'] != int(uid):
+        try:
+            user_id = request.session['uid']
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有登录"})
+        if user_id != int(uid):
             return JsonResponse({'error': 1012, 'msg': "这不是你的空间哦"})
         user = User.objects.get(id=uid)
 
@@ -185,16 +190,19 @@ def get_activities(request):
                 "id": activity.id,
                 "type": activity.type,
                 "create_time": activity.create_time,
-                "programs": activity.programs
+                "programs": activity.programs,
+                "t_id": activity.t_id,
             }
             activities_need.append(user_act)
         return JsonResponse({'error': 1, 'msg': '获取动态成功', 'data': activities_need})
     return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
 
 
-def get_admin_spaces(request):
+@csrf_exempt
+def get_admin_spaces(request, uid):
     if request.method == 'GET':
-        uid = request.session.get('uid')
+        uid = int(uid)
+
         studyspaces = StudySpaces.objects.filter(creator_id=uid)
         studyspaces_need = []
         for studyspace in studyspaces:
@@ -211,13 +219,15 @@ def get_admin_spaces(request):
     return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
 
 
-def get_follow_spaces(request):
+@csrf_exempt
+def get_follow_spaces(request, uid):
     if request.method == 'GET':
-        uid = request.session.get('uid')
+        uid = int(uid)
+
         follows = Follows.objects.filter(following=uid, followed_type='spaces')
         studyspaces = []
         for follow in follows:
-            studyspaces.append(StudySpaces.objects.filter(id=follow.followed_id))
+            studyspaces.append(StudySpaces.objects.get(id=follow.followed_id))
         studyspaces_need = []
         for studyspace in studyspaces:
             user_act = {
@@ -230,4 +240,252 @@ def get_follow_spaces(request):
             }
             studyspaces_need.append(user_act)
         return JsonResponse({'error': 1, 'msg': '获取关注空间成功', 'data': studyspaces_need})
+    return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+
+@csrf_exempt
+def get_resources(request, uid):
+    if request.method == 'GET':
+        uid = int(uid)
+        resources = SpaceResources.objects.filter(user_id=uid)
+        resources_need = []
+
+        for resource in resources:
+            studyspace = StudySpaces.objects.get(id=resource.space_id)
+            user_act = {
+                "id": resource.id,
+                "space_name": studyspace.space_name,
+                "create_time": resource.create_time,
+                "file_name": resource.file_name,
+                "from_space_id": studyspace.id,
+            }
+            resources_need.append(user_act)
+        return JsonResponse({'error': 1, 'msg': '获取资源成功', 'data': resources_need})
+    return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+
+@csrf_exempt
+def get_questions(request, uid):
+    if request.method == 'GET':
+        uid = int(uid)
+        questions = SpaceQuestions.objects.filter(user_id=uid)
+        questions_need = []
+
+        for question in questions:
+            studyspace = StudySpaces.objects.get(id=question.space_id)
+            user_act = {
+                "id": question.id,
+                "space_name": studyspace.space_name,
+                "question_title": question.title,
+                "create_time": question.create_time,
+                "from_space_id": studyspace.id,
+                "uid": uid,
+            }
+            questions_need.append(user_act)
+        return JsonResponse({'error': 1, 'msg': '获取提问成功', 'data': questions_need})
+    return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+
+@csrf_exempt
+def get_answers(request, uid):
+    if request.method == 'GET':
+        uid = int(uid)
+        answers = SpaceComments.objects.filter(user_id=uid, comment_type='answer')
+        answers_need = []
+
+        for answer in answers:
+            studyspace = StudySpaces.objects.get(id=answer.space_id)
+            user_act = {
+                "id": answer.id,
+                "space_name": studyspace.space_name,
+                "content": answer.content,
+                "create_time": answer.create_time,
+                "from_space_id": studyspace.id,
+                "uid": uid,
+            }
+            answers_need.append(user_act)
+        return JsonResponse({'error': 1, 'msg': '获取回答成功', 'data': answers_need})
+    return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+
+@csrf_exempt
+def get_exercises(request, uid):
+    if request.method == 'GET':
+        uid = int(uid)
+        exercises = SpaceExercises.objects.filter(user_id=uid)
+        exercises_need = []
+
+        for exercise in exercises:
+            studyspace = StudySpaces.objects.get(id=exercise.space_id)
+            user_act = {
+                "id": exercise.id,
+                "space_name": studyspace.space_name,
+                "content": exercise.content,
+                "create_time": exercise.create_time,
+                "from_space_id": studyspace.space_id,
+                "difficulty": exercise.difficulty,
+                "type": exercise.type,
+                "uid": uid,
+            }
+            exercises_need.append(user_act)
+        return JsonResponse({'error': 1, 'msg': '获取习题成功', 'data': exercises_need})
+    return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+
+@csrf_exempt
+def get_collects_resources(request, uid):
+    if request.method == 'GET':
+        uid = int(uid)
+        collects = Collects.objects.filter(collect_type='resources', hosts_id=uid)
+        resources_need = []
+
+        for collect in collects:
+            r_id = collect.collect_id
+            resource = SpaceResources.objects.get(id=r_id)
+            studyspace = StudySpaces.objects.get(id=resource.space_id)
+            user_act = {
+                "id": resource.id,
+                "space_name": studyspace.space_name,
+                "create_time": resource.create_time,
+                "file_name": resource.file_name,
+                "from_space_id": studyspace.id,
+            }
+            resources_need.append(user_act)
+        return JsonResponse({'error': 1, 'msg': '获取资源成功', 'data': resources_need})
+
+    return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+
+@csrf_exempt
+def get_collects_questions(request, uid):
+    if request.method == 'GET':
+        uid = int(uid)
+        collects = Collects.objects.filter(collect_type='questions', hosts_id=uid)
+        questions_need = []
+
+        for collect in collects:
+            q_id = collect.collect_id
+            question = SpaceResources.objects.get(id=q_id)
+            studyspace = StudySpaces.objects.get(id=question.space_id)
+            user_act = {
+                "id": question.id,
+                "space_name": studyspace.space_name,
+                "question_title": question.title,
+                "create_time": question.create_time,
+                "from_space_id": studyspace.id,
+                "uid": uid,
+            }
+            questions_need.append(user_act)
+        return JsonResponse({'error': 1, 'msg': '获取提问成功', 'data': questions_need})
+    return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+
+@csrf_exempt
+def get_collects_answers(request, uid):
+    if request.method == 'GET':
+        uid = int(uid)
+        collects = Collects.objects.filter(collect_type='answers', hosts_id=uid)
+        answers_need = []
+
+        for collect in collects:
+            a_id = collect.collect_id
+            answer = SpaceResources.objects.filter(id=a_id)
+            studyspace = StudySpaces.objects.filter(id=answer.space_id)
+            user_act = {
+                "id": answer.id,
+                "space_name": studyspace.space_name,
+                "content": answer.content,
+                "create_time": answer.create_time,
+                "from_space_id": studyspace.id,
+                "uid": uid,
+            }
+            answers_need.append(user_act)
+        return JsonResponse({'error': 1, 'msg': '获取回答成功', 'data': answers_need})
+    return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+
+@csrf_exempt
+def get_collects_exercises(request, uid):
+    if request.method == 'GET':
+        uid = int(uid)
+        collects = Collects.objects.filter(collect_type='exercises', hosts_id=uid)
+        exercises_need = []
+
+        for collect in collects:
+            e_id = collect.collect_id
+            exercise = SpaceResources.objects.get(id=e_id)
+            studyspace = StudySpaces.objects.get(id=exercise.space_id)
+            user_act = {
+                "id": exercise.id,
+                "space_name": studyspace.space_name,
+                "content": exercise.content,
+                "create_time": exercise.create_time,
+                "from_space_id": studyspace.space_id,
+                "difficulty": exercise.difficulty,
+                "type": exercise.type,
+                "uid": uid,
+            }
+            exercises_need.append(user_act)
+        return JsonResponse({'error': 1, 'msg': '获取习题成功', 'data': exercises_need})
+    return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+
+@csrf_exempt
+def get_followings(request, uid):
+    if request.method == 'GET':
+        uid = int(uid)
+        follows = Follows.objects.filter(followings=uid, followed_type='people')
+        user_need = []
+
+        for follow in follows:
+            user = User.objects.get(id=follow.followed_id)
+            user_act = {
+                "uid": user.id,
+                "username": user.username,
+            }
+            user_need.append(user_act)
+
+        return JsonResponse({'error': 1, 'msg': '获取关注列表成功', 'data': user_need})
+    return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+
+@csrf_exempt
+def get_fans(request, uid):
+    if request.method == 'GET':
+        uid = int(uid)
+        follows = Follows.objects.filter(followed_id=uid, followed_type='people')
+        fan_need = []
+
+        for follow in follows:
+            user = User.objects.get(id=follow.following)
+            user_act = {
+                "uid": user.id,
+                "username": user.username,
+                "fans": user.followers,
+            }
+            fan_need.append(user_act)
+        return JsonResponse({'error': 1, 'msg': '获取粉丝列表成功', 'data': fan_need})
+    return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+
+@csrf_exempt
+def follow_people(request, uid):
+    if request.method == 'POST':
+        try:
+            user_id = request.session['uid']
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有登录"})
+        uid = int(uid)
+        if uid == user_id:
+            return JsonResponse({'error': 1013, 'msg': "不能关注自己哦"})
+        fan = User.objects.get(id=user_id)
+        follow = User.objects.get(id=uid)
+        fan.followings += 1
+        follow.followers += 1
+
+        new_follow = Follows()
+        new_follow.followed_type = 'people'
+        new_follow.followed_id = uid
+        new_follow.following = user_id
+        return JsonResponse({'error': 1, 'msg': '关注成功'})
     return JsonResponse({'error': 1001, 'msg': "请求方式错误"})

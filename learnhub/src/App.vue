@@ -1,38 +1,32 @@
 <template>
-	<el-container>
-		<el-header>
-      		<MyHeader/>
-		</el-header>
-		<el-container>
-			<el-aside width="200px">
-				<MyAside/>
-			</el-aside>
-			<el-main>
-				<SpaceHeader/>
-				<MyList/>
-			</el-main>
-		</el-container>
-    </el-container>
-	
+  <div id="app">
+    <nav>
+      <router-link to="/">Home</router-link> |
+      <router-link to="/about">About</router-link>
+    </nav>
+    <router-view/>
+  </div>
 </template>
 
-<script>
-	import MyHeader from './components/MyHeader.vue'
-	import SpaceHeader from './components/SpaceHeader.vue'
-	import MyList from './components/MyList.vue'
-	import MyAside from './components/MyAside.vue'
-	
-	export default {
-		name: 'App',
-		components:{MyHeader, MyList, SpaceHeader, MyAside}
-
-	}
-</script>
-
 <style>
-	el-text {
-		font-family:'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
-  					'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
-	}
-	
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+}
+
+nav {
+  padding: 30px;
+}
+
+nav a {
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+nav a.router-link-exact-active {
+  color: #42b983;
+}
 </style>

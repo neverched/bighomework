@@ -150,13 +150,10 @@ def get_info(request, uid):
 @csrf_exempt
 def edit_info(request, uid):
     if request.method == 'POST':
-        username = json.loads(request.body)['username']
-        gender = json.loads(request.body)['gender']
-        tags = json.loads(request.body)['tags']
-        destination = json.loads(request.body)['destination']
-        job = json.loads(request.body)['job']
-        organization = json.loads(request.body)['organization']
-        intro = json.loads(request.body)['intro']
+        try:
+            user = User.objects.get(id=uid)
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
 
         try:
             user_id = request.session['uid']
@@ -164,7 +161,14 @@ def edit_info(request, uid):
             return JsonResponse({'error': 1014, 'msg': "没有登录"})
         if user_id != int(uid):
             return JsonResponse({'error': 1012, 'msg': "这不是你的空间哦"})
-        user = User.objects.get(id=uid)
+
+        username = json.loads(request.body)['username']
+        gender = json.loads(request.body)['gender']
+        tags = json.loads(request.body)['tags']
+        destination = json.loads(request.body)['destination']
+        job = json.loads(request.body)['job']
+        organization = json.loads(request.body)['organization']
+        intro = json.loads(request.body)['intro']
 
         user.username = username
         user.gender = gender
@@ -183,7 +187,14 @@ def edit_info(request, uid):
 def get_activities(request):
     if request.method == 'GET':
         uid = request.session.get('uid')
-        activities = Activities.objects.filter(hosts=uid)
+        try:
+            follow = User.objects.get(id=uid)
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
+        try:
+            activities = Activities.objects.filter(hosts=uid)
+        except:
+            return JsonResponse({'error': 1, 'msg': '获取动态成功', 'data': []})
         activities_need = []
         for activity in activities:
             user_act = {
@@ -202,8 +213,14 @@ def get_activities(request):
 def get_admin_spaces(request, uid):
     if request.method == 'GET':
         uid = int(uid)
-
-        studyspaces = StudySpaces.objects.filter(creator_id=uid)
+        try:
+            follow = User.objects.get(id=uid)
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
+        try:
+            studyspaces = StudySpaces.objects.filter(creator_id=uid)
+        except:
+            return JsonResponse({'error': 1, 'msg': '获取管理空间成功', 'data': []})
         studyspaces_need = []
         for studyspace in studyspaces:
             user_act = {
@@ -223,7 +240,10 @@ def get_admin_spaces(request, uid):
 def get_follow_spaces(request, uid):
     if request.method == 'GET':
         uid = int(uid)
-
+        try:
+            follow = User.objects.get(id=uid)
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
         follows = Follows.objects.filter(following=uid, followed_type='spaces')
         studyspaces = []
         for follow in follows:
@@ -247,7 +267,14 @@ def get_follow_spaces(request, uid):
 def get_resources(request, uid):
     if request.method == 'GET':
         uid = int(uid)
-        resources = SpaceResources.objects.filter(user_id=uid)
+        try:
+            follow = User.objects.get(id=uid)
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
+        try:
+            resources = SpaceResources.objects.filter(user_id=uid)
+        except:
+            return JsonResponse({'error': 1, 'msg': '获取资源成功', 'data': []})
         resources_need = []
 
         for resource in resources:
@@ -268,7 +295,14 @@ def get_resources(request, uid):
 def get_questions(request, uid):
     if request.method == 'GET':
         uid = int(uid)
-        questions = SpaceQuestions.objects.filter(user_id=uid)
+        try:
+            follow = User.objects.get(id=uid)
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
+        try:
+            questions = SpaceQuestions.objects.filter(user_id=uid)
+        except:
+            return JsonResponse({'error': 1, 'msg': '获取提问成功', 'data': []})
         questions_need = []
 
         for question in questions:
@@ -290,7 +324,14 @@ def get_questions(request, uid):
 def get_answers(request, uid):
     if request.method == 'GET':
         uid = int(uid)
-        answers = SpaceComments.objects.filter(user_id=uid, comment_type='answer')
+        try:
+            follow = User.objects.get(id=uid)
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
+        try:
+            answers = SpaceComments.objects.filter(user_id=uid, comment_type='answer')
+        except:
+            return JsonResponse({'error': 1, 'msg': '获取回答成功', 'data': []})
         answers_need = []
 
         for answer in answers:
@@ -312,7 +353,14 @@ def get_answers(request, uid):
 def get_exercises(request, uid):
     if request.method == 'GET':
         uid = int(uid)
-        exercises = SpaceExercises.objects.filter(user_id=uid)
+        try:
+            follow = User.objects.get(id=uid)
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
+        try:
+            exercises = SpaceExercises.objects.filter(user_id=uid)
+        except:
+            return JsonResponse({'error': 1, 'msg': '获取习题成功', 'data': []})
         exercises_need = []
 
         for exercise in exercises:
@@ -336,7 +384,20 @@ def get_exercises(request, uid):
 def get_collects_resources(request, uid):
     if request.method == 'GET':
         uid = int(uid)
-        collects = Collects.objects.filter(collect_type='resources', hosts_id=uid)
+        try:
+            user_id = request.session['uid']
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有登录"})
+        try:
+            follow = User.objects.get(id=uid)
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
+        if uid != user_id:
+            return JsonResponse({'error': 1013, 'msg': "这不是你的主页，不能观看哦"})
+        try:
+            collects = Collects.objects.filter(collect_type='resources', hosts_id=uid)
+        except:
+            return JsonResponse({'error': 1, 'msg': '获取资源成功', 'data': []})
         resources_need = []
 
         for collect in collects:
@@ -360,7 +421,20 @@ def get_collects_resources(request, uid):
 def get_collects_questions(request, uid):
     if request.method == 'GET':
         uid = int(uid)
-        collects = Collects.objects.filter(collect_type='questions', hosts_id=uid)
+        try:
+            user_id = request.session['uid']
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有登录"})
+        try:
+            follow = User.objects.get(id=uid)
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
+        if uid != user_id:
+            return JsonResponse({'error': 1013, 'msg': "这不是你的主页，不能观看哦"})
+        try:
+            collects = Collects.objects.filter(collect_type='questions', hosts_id=uid)
+        except:
+            return JsonResponse({'error': 1, 'msg': '获取提问成功', 'data': []})
         questions_need = []
 
         for collect in collects:
@@ -384,7 +458,20 @@ def get_collects_questions(request, uid):
 def get_collects_answers(request, uid):
     if request.method == 'GET':
         uid = int(uid)
-        collects = Collects.objects.filter(collect_type='answers', hosts_id=uid)
+        try:
+            user_id = request.session['uid']
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有登录"})
+        try:
+            follow = User.objects.get(id=uid)
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
+        if uid != user_id:
+            return JsonResponse({'error': 1013, 'msg': "这不是你的主页，不能观看哦"})
+        try:
+            collects = Collects.objects.filter(collect_type='answers', hosts_id=uid)
+        except:
+            return JsonResponse({'error': 1, 'msg': '获取回答成功', 'data': []})
         answers_need = []
 
         for collect in collects:
@@ -408,7 +495,20 @@ def get_collects_answers(request, uid):
 def get_collects_exercises(request, uid):
     if request.method == 'GET':
         uid = int(uid)
-        collects = Collects.objects.filter(collect_type='exercises', hosts_id=uid)
+        try:
+            user_id = request.session['uid']
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有登录"})
+        try:
+            follow = User.objects.get(id=uid)
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
+        if uid != user_id:
+            return JsonResponse({'error': 1013, 'msg': "这不是你的主页，不能观看哦"})
+        try:
+            collects = Collects.objects.filter(collect_type='exercises', hosts_id=uid)
+        except:
+            return JsonResponse({'error': 1, 'msg': '获取习题成功', 'data': []})
         exercises_need = []
 
         for collect in collects:
@@ -434,8 +534,15 @@ def get_collects_exercises(request, uid):
 def get_followings(request, uid):
     if request.method == 'GET':
         uid = int(uid)
-        follows = Follows.objects.filter(following=uid, followed_type='people')
+        try:
+            follow = User.objects.get(id=uid)
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
         user_need = []
+        try:
+            follows = Follows.objects.filter(following=uid, followed_type='people')
+        except:
+            return JsonResponse({'error': 1, 'msg': '获取关注列表成功', 'data': user_need})
 
         for follow in follows:
             user = User.objects.get(id=follow.followed_id)
@@ -453,7 +560,14 @@ def get_followings(request, uid):
 def get_fans(request, uid):
     if request.method == 'GET':
         uid = int(uid)
-        follows = Follows.objects.filter(followed_id=uid, followed_type='people')
+        try:
+            follow = User.objects.get(id=uid)
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
+        try:
+            follows = Follows.objects.filter(followed_id=uid, followed_type='people')
+        except:
+            return JsonResponse({'error': 1, 'msg': '获取粉丝列表成功', 'data': []})
         fan_need = []
 
         for follow in follows:
@@ -476,13 +590,19 @@ def follow_people(request, uid):
         except:
             return JsonResponse({'error': 1014, 'msg': "没有登录"})
         uid = int(uid)
+
+        try:
+            follow = User.objects.get(id=uid)
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
+
         if uid == user_id:
             return JsonResponse({'error': 1013, 'msg': "不能关注自己哦"})
 
         fan = User.objects.get(id=user_id)
-        follow = User.objects.get(id=uid)
+
         try:
-            following = Follows.objects.get(following=uid, followed_id=user_id)
+            Follows.objects.get(following=uid, followed_id=user_id)
         except:
             fan.followings += 1
             follow.followers += 1

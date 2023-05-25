@@ -122,6 +122,7 @@ class SpaceResources(models.Model):
     space_id = models.ForeignKey('StudySpaces', on_delete=models.CASCADE)
     user_id = models.ForeignKey('User', on_delete=models.CASCADE)
     resource_name = models.CharField(max_length=100)
+    introduction = models.CharField(max_length=500)
     file = models.BinaryField()
     create_time = models.DateTimeField()
     last_update_time = models.DateTimeField()
@@ -201,12 +202,18 @@ class SpaceLikes(models.Model):
     user_id = models.ForeignKey('User', on_delete=models.CASCADE)  # 点赞者id
     like_time = models.DateTimeField()
 
+    class Meta:
+        db_table = 'Space_likes'
+
 
 class SpaceFollows(models.Model):
     id = models.AutoField(primary_key=True)
     space_id = models.ForeignKey('StudySpaces', on_delete=models.CASCADE)  # 空间id
     user_id = models.ForeignKey('User', on_delete=models.CASCADE)  # 点赞者id
     follow_time = models.DateTimeField()
+
+    class Meta:
+        db_table = 'Space_follows'
 
 
 class SpaceMembers(models.Model):

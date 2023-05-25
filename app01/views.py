@@ -18,11 +18,23 @@ def get_time_now():
     return create_time
 
 
+def exist_check(*args):
+    for each in args:
+        if each is None:
+            return JsonResponse({
+                'errno': '401',
+                'msg': 'POST参数缺少'
+            })
+    return None
+
+
 def order_query_list(query_list, method):
     if method == '最多点赞':
         query_list.sort(key=lambda k: (k.get('likes', 0)), reverse=True)
     elif method == '最多关注':
         query_list.sort(key=lambda k: (k.get('follows', 0)), reverse=True)
+    elif method == '最多讨论':
+        query_list.sort(key=lambda k: (k.get('comments', 0)), reverse=True)
     return query_list
 
 
@@ -79,6 +91,146 @@ def init_ret_dict(ses, space):
                 'followed': False,
                 }
     return ret_dict
+
+
+def like_follow_space(space, ses, is_like, is_follow, ret_dict, query_list, total, page):
+    if is_like:
+        if ses.get('user_id') is None:
+            return JsonResponse({
+                'errno': '400',
+                'msg': '尚未登录'})
+        if ret_dict['liked']:
+            data.SpaceLikes.objects.filter(space_id=space.id, user_id=ses['user_id']).delete()
+            ret_dict['liked'] = False
+        else:
+            data.SpaceLikes.objects.create(space_id=space.id, user_id=ses['user_id'], like_time=get_time_now())
+            ret_dict['liked'] = True
+        return JsonResponse({
+            'errno': '200',
+            'msg': '点赞/取消点赞成功',
+            'data': ret_dict,
+            'list': query_list[page * 10 - 10:page * 10 - 1],
+            'total': total
+        })
+
+    elif is_follow:
+        if ses.get('user_id') is None:
+            return JsonResponse({
+                'errno': '400',
+                'msg': '尚未登录'})
+        if ret_dict['followed']:
+            data.SpaceFollows.objects.filter(space_id=space.id, user_id=ses['user_id']).delete()
+            ret_dict['followed'] = False
+        else:
+            data.SpaceFollows.objects.create(space_id=space.id, user_id=ses['user_id'], like_time=get_time_now())
+            ret_dict['followed'] = True
+        return JsonResponse({
+            'errno': '200',
+            'msg': '收藏/取消收藏成功',
+            'data': ret_dict,
+            'list': query_list[page * 10 - 10:page * 10 - 1],
+            'total': total
+        })
+    else:
+        return JsonResponse({
+            'errno': '200',
+            'msg': '查询成功',
+            'data': ret_dict,
+            'list': query_list[page * 10 - 10:page * 10 - 1],
+            'total': total
+        })
+
+
+def like_follow_element(space, ses, is_like, is_follow, is_like_element, is_follow_element,
+                        ret_dict, ele_type, ele_dict, comments_list):
+    if is_like:
+        if ses.get('user_id') is None:
+            return JsonResponse({
+                'errno': '400',
+                'msg': '尚未登录'})
+        if ret_dict['liked']:
+            data.SpaceLikes.objects.filter(space_id=space.id, user_id=ses['user_id']).delete()
+            ret_dict['liked'] = False
+        else:
+            data.SpaceLikes.objects.create(space_id=space.id, user_id=ses['user_id'], like_time=get_time_now())
+            ret_dict['liked'] = True
+        return JsonResponse({
+            'errno': '200',
+            'msg': '点赞/取消点赞成功',
+            'data': ret_dict,
+            'element': ele_dict,
+            'comments_list': comments_list
+        })
+
+    elif is_follow:
+        if ses.get('user_id') is None:
+            return JsonResponse({
+                'errno': '400',
+                'msg': '尚未登录'})
+        if ret_dict['followed']:
+            data.SpaceFollows.objects.filter(space_id=space.id, user_id=ses['user_id']).delete()
+            ret_dict['followed'] = False
+        else:
+            data.SpaceFollows.objects.create(space_id=space.id, user_id=ses['user_id'], like_time=get_time_now())
+            ret_dict['followed'] = True
+        return JsonResponse({
+            'errno': '200',
+            'msg': '收藏/取消收藏成功',
+            'data': ret_dict,
+            'element': ele_dict,
+            'comments_list': comments_list
+        })
+
+    elif is_like_element:
+        if ses.get('user_id') is None:
+            return JsonResponse({
+                'errno': '400',
+                'msg': '尚未登录'})
+        if ele_dict['ele_liked']:
+            data.Likes.objects.filter(hosts=ses['user_id'],
+                                      liked_type=ele_type, liked_id=ele_dict['id']).delete()
+            ele_dict['ele_liked'] = False
+        else:
+            data.Likes.objects.create(hosts=ses['user_id'],
+                                      liked_type=ele_type, liked_id=ele_dict['id'], liked_time=get_time_now())
+            ele_dict['ele_liked'] = True
+        return JsonResponse({
+            'errno': '200',
+            'msg': '点赞/取消点赞元素成功',
+            'data': ret_dict,
+            'element': ele_dict,
+            'comments_list': comments_list
+        })
+
+    elif is_follow_element:
+        if ses.get('user_id') is None:
+            return JsonResponse({
+                'errno': '400',
+                'msg': '尚未登录'})
+        if ele_dict['ele_followed']:
+            data.Follows.objects.filter(following=ses['user_id'],
+                                        followed_type=ele_type, followed_id=ele_dict['id']).delete()
+            ele_dict['ele_followed'] = False
+        else:
+            data.Follows.objects.create(following=ses['user_id'], followed_type=ele_type,
+                                        followed_id=ele_dict['id'], followed_time=get_time_now())
+            ele_dict['ele_followed'] = True
+        return JsonResponse({
+            'errno': '200',
+            'msg': '收藏/取消收藏元素成功',
+            'data': ret_dict,
+            'element': ele_dict,
+            'comments_list': comments_list
+        })
+
+    else:
+        return JsonResponse({
+            'errno': '200',
+            'msg': '查询成功',
+            'data': ret_dict,
+            'element': ele_dict,
+            'comments_list': comments_list
+        })
 
 
 '''
@@ -237,6 +389,7 @@ def spaces_index(request):
 
 '''
 需要传递的数据:
+is_create: int 代表是否点击了最终确认创建按钮
 space_name: string 新空间名
 space_introduction: string 新空间介绍
 space_permission: int 新空间访问权限，0为公有，非0为私有
@@ -252,6 +405,12 @@ def space_create(request):
             return JsonResponse({
                 'errno': '400',
                 'msg': '尚未登录'})
+        is_create = request.POST.get('is_create')
+        if is_create is None:
+            return JsonResponse({
+                'errno': '200',
+                'msg': '等待提交'
+            })
         space_name = request.POST.get('space_name')
         if space_name is None:
             return JsonResponse({
@@ -391,10 +550,15 @@ def space_main(request, space_id):
             else:
                 data.SpaceFollows.objects.create(space_id=space.id, user_id=ses['user_id'], like_time=get_time_now())
                 ret_dict['followed'] = True
-        else:
             return JsonResponse({
                 'errno': '200',
                 'msg': '收藏/取消收藏成功',
+                'data': ret_dict,
+            })
+        else:
+            return JsonResponse({
+                'errno': '200',
+                'msg': '查询成功',
                 'data': ret_dict,
             })
 
@@ -473,8 +637,8 @@ def space_resources_index(request, space_id):
         total = resources_set.count()
         for each in resources_set:
             each_dict = model_to_dict(each)
-            each_dict['likes'] = data.Likes.objects.filter(like_type='资源', liked_id=each_dict['id']).count()
-            each_dict['follows'] = data.Follows.objects.filter(like_type='资源', liked_id=each_dict['id']).count()
+            each_dict['likes'] = data.Likes.objects.filter(liked_type='资源', liked_id=each_dict['id']).count()
+            each_dict['follows'] = data.Follows.objects.filter(liked_type='资源', liked_id=each_dict['id']).count()
             query_list.append(each_dict)
         query_list = order_query_list(query_list, method)
 
@@ -489,51 +653,7 @@ def space_resources_index(request, space_id):
             if followed == 1:
                 ret_dict['followed'] = True
 
-        if is_like:
-            if ses.get('user_id') is None:
-                return JsonResponse({
-                    'errno': '400',
-                    'msg': '尚未登录'})
-            if ret_dict['liked']:
-                data.SpaceLikes.objects.filter(space_id=space.id, user_id=ses['user_id']).delete()
-                ret_dict['liked'] = False
-            else:
-                data.SpaceLikes.objects.create(space_id=space.id, user_id=ses['user_id'], like_time=get_time_now())
-                ret_dict['liked'] = True
-            return JsonResponse({
-                'errno': '200',
-                'msg': '点赞/取消点赞成功',
-                'data': ret_dict,
-                'list': query_list[page * 10 - 10:page * 10 - 1],
-                'total': total
-            })
-        elif is_follow:
-            if ses.get('user_id') is None:
-                return JsonResponse({
-                    'errno': '400',
-                    'msg': '尚未登录'})
-            if ret_dict['followed']:
-                data.SpaceFollows.objects.filter(space_id=space.id, user_id=ses['user_id']).delete()
-                ret_dict['followed'] = False
-            else:
-                data.SpaceFollows.objects.create(space_id=space.id, user_id=ses['user_id'], like_time=get_time_now())
-                ret_dict['followed'] = True
-            return JsonResponse({
-                'errno': '200',
-                'msg': '收藏/取消收藏成功',
-                'data': ret_dict,
-                'list': query_list[page * 10 - 10:page * 10 - 1],
-                'total': total
-            })
-
-        else:
-            return JsonResponse({
-                'errno': '200',
-                'msg': '查询资源成功',
-                'data': ret_dict,
-                'list': query_list[page * 10 - 10:page * 10 - 1],
-                'total': total
-            })
+        return like_follow_space(space, ses, is_like, is_follow, ret_dict, query_list, total, page)
 
     else:
         return JsonResponse({
@@ -572,6 +692,7 @@ def space_groups_index(request, space_id):
             return JsonResponse({
                 'errno': '401',
                 'msg': 'POST参数缺少page'})
+
         query_list = []
         groups_set = data.SpaceGroups.objects.filter(space_id=space.id)
         total = groups_set.count()
@@ -589,55 +710,17 @@ def space_groups_index(request, space_id):
         is_like = request.POST.get('is_like')
         is_follow = request.POST.get('is_follow')
 
-        if is_like:
-            if ses.get('user_id') is None:
-                return JsonResponse({
-                    'errno': '400',
-                    'msg': '尚未登录'})
-            if ret_dict['liked']:
-                data.SpaceLikes.objects.filter(space_id=space.id, user_id=ses['user_id']).delete()
-                ret_dict['liked'] = False
-            else:
-                data.SpaceLikes.objects.create(space_id=space.id, user_id=ses['user_id'], like_time=get_time_now())
-                ret_dict['liked'] = True
-            return JsonResponse({
-                'errno': '200',
-                'msg': '点赞/取消点赞成功',
-                'data': ret_dict,
-                'list': query_list[page * 10 - 10:page * 10 - 1],
-                'total': total
-            })
+        return like_follow_space(space, ses, is_like, is_follow, ret_dict, query_list, total, page)
 
-        elif is_follow:
-            if ses.get('user_id') is None:
-                return JsonResponse({
-                    'errno': '400',
-                    'msg': '尚未登录'})
-            if ret_dict['followed']:
-                data.SpaceFollows.objects.filter(space_id=space.id, user_id=ses['user_id']).delete()
-                ret_dict['followed'] = False
-            else:
-                data.SpaceFollows.objects.create(space_id=space.id, user_id=ses['user_id'], like_time=get_time_now())
-                ret_dict['followed'] = True
-            return JsonResponse({
-                'errno': '200',
-                'msg': '收藏/取消收藏成功',
-                'data': ret_dict,
-                'list': query_list[page * 10 - 10:page * 10 - 1],
-                'total': total
-            })
-        else:
-            return JsonResponse({
-                'errno': '200',
-                'msg': '查询群组成功',
-                'data': ret_dict,
-                'list': query_list[page * 10 - 10:page * 10 - 1],
-                'total': total
-            })
     else:
         return JsonResponse({
             'errno': '405',
             'msg': '请求方式错误'})
+
+
+'''
+
+'''
 
 
 def space_questions_index(request, space_id):
@@ -695,15 +778,25 @@ def space_questions_index(request, space_id):
         total = questions_set.count()
         for each in questions_set:
             each_dict = model_to_dict(each)
+            each_dict['likes'] = data.Likes.objects.filter(liked_type='讨论', liked_id=each_dict['id']).count()
+            each_dict['comments'] = len(get_comments_list(space, each_dict['id'], '讨论'))
+            each_dict['follows'] = data.Follows.objects.filter(liked_type='讨论', liked_id=each_dict['id']).count()
+            query_list.append(each_dict)
+        query_list = order_query_list(query_list, method)
 
-
-
-
+        is_like = request.POST.get('is_like')
+        is_follow = request.POST.get('is_follow')
+        return like_follow_space(space, ses, is_like, is_follow, ret_dict, query_list, total, page)
 
     else:
         return JsonResponse({
             'errno': '405',
             'msg': '请求方式错误'})
+
+
+'''
+习题没有排序
+'''
 
 
 def space_exercises_index(request, space_id):
@@ -727,8 +820,18 @@ def space_exercises_index(request, space_id):
                 'errno': '401',
                 'msg': 'POST参数缺少page'})
         query_list = []
-        exercises_set = data.SpaceResources.objects.filter(space_id=space_id)
+        exercises_set = data.SpaceExercises.objects.filter(space_id=space_id)
         total = exercises_set.count()
+        for each in exercises_set:
+            each_dict = model_to_dict(each)
+            each_dict['likes'] = data.Likes.objects.filter(liked_type='习题', liked_id=each_dict['id']).count()
+            each_dict['comments'] = len(get_comments_list(space, each_dict['id'], '习题'))
+            each_dict['follows'] = data.Follows.objects.filter(liked_type='习题', liked_id=each_dict['id']).count()
+            query_list.append(each_dict)
+
+        is_like = request.POST.get('is_like')
+        is_follow = request.POST.get('is_follow')
+        return like_follow_space(space, ses, is_like, is_follow, ret_dict, query_list, total, page)
 
     else:
         return JsonResponse({
@@ -738,7 +841,35 @@ def space_exercises_index(request, space_id):
 
 def space_notices_index(request, space_id):
     if request.method == 'POST':
-        return 0
+        ses = request.sessions
+        space = data.StudySpaces.objects.filter(space_id=space_id)
+        if space.count() == 0:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到学习空间'})
+        space = space[0]
+        perm = space_permissions_check(ses, space)
+        if perm <= 0:
+            return JsonResponse({
+                'errno': '403',
+                'msg': '非私有学习空间成员'})
+        ret_dict = init_ret_dict(ses, space)
+        page = request.POST.get('page')
+        if page is None:
+            return JsonResponse({
+                'errno': '401',
+                'msg': 'POST参数缺少page'})
+        query_list = []
+        notices_set = data.SpaceNotices.objects.filter(space_id=space_id).order_by('-last_update_time')
+        total = notices_set.count()
+        return JsonResponse({
+            'errno': '200',
+            'msg': '查询成功',
+            'data': ret_dict,
+            'list': query_list[page * 10 - 10:page * 10 - 1],
+            'total': total
+        })
+
     else:
         return JsonResponse({
             'errno': '405',
@@ -749,10 +880,11 @@ def space_notices_index(request, space_id):
 需要的参数：
 is_like: int 代表是否点击了点赞按钮，True/1代表是
 is_follow: int 代表是否点击了收藏按钮，True/1代表是
-is_edit: int 代表是否申请编辑自己创建的资源内容，True/1代表是
 is_delete: int 代表是否申请删除自己创建的资源内容，True/1代表是
 is_like_element: int 代表是否是点击了点赞资源按钮，True/1代表是
+is_follow_element: int 代表是否是点击了收藏资源按钮，True/1代表是
 （以上五个至多一个True，学习空间除了创建界面任何位置都能点击点赞收藏按钮）
+
 
 返回内容
 data：ret_dict
@@ -776,39 +908,150 @@ def space_resources(request, space_id, resources_id):
             return JsonResponse({
                 'errno': '403',
                 'msg': '非私有学习空间成员'})
+        resource = data.SpaceResources.objects.filter(id=resources_id)
+        if resource.count() != 1:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到待删除资源'})
         ret_dict = init_ret_dict(ses, space)
         is_delete = request.POST.get('is_delete')
+        resource = resource[0]
 
         if is_delete:
             if ses.get('user_id') is None:
                 return JsonResponse({
                     'errno': '400',
                     'msg': '尚未登录'})
-            resource_deleted = data.SpaceResources.objects.filter(id=resources_id)
-            if resource_deleted.count() != 1:
-                return JsonResponse({
-                    'errno': '404',
-                    'msg': '未找到待删除资源'})
-            if resource_deleted[0].user_id != ses.get('user_id'):
+            resource = data.SpaceResources.objects.filter(id=resources_id)
+
+            if resource.user_id != ses.get('user_id'):
                 return JsonResponse({
                     'errno': '407',
                     'msg': '待删除资源不是当前用户所创建'})
-            resource_deleted.delete()
+            resource.delete()
             return JsonResponse({
                 'errno': '200',
                 'msg': '删除成功'})
+        ele_type = '资源'
+        ele_dict = model_to_dict(resource)
+        ele_dict['likes'] = data.Likes.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
+        ele_dict['follows'] = data.Follows.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
 
+        ele_dict['ele_liked'] = False
+        ele_dict['ele_followed'] = False
+        if data.Likes.objects.filter(hosts=ses['user_id'],
+                                     liked_type=ele_type, liked_id=ele_dict['id']).count() == 1:
+            ele_dict['ele_liked'] = True
+        if data.Follows.objects.filter(following=ses['user_id'],
+                                       followed_type=ele_type, followed_id=ele_dict['id']).count() == 1:
+            ele_dict['ele_followed'] = True
 
+        comments_list = get_comments_list(space, ele_dict['id'], ele_type)
+        for each in comments_list:
+            commenter = data.User.objects.filter(id=each['user_id'])
+            if commenter.count() != 1:
+                return JsonResponse({
+                    'errno': '402',
+                    'msg': '评论者id不存在'})
+            each['commenter'] = model_to_dict(commenter)
 
+        is_like = request.POST.get('is_like')
+        is_follow = request.POST.get('is_follow')
+        is_like_element = request.POST.get('is_like_element')
+        is_follow_element = request.POST.get('is_follow_element')
+        return like_follow_element(space, ses, is_like, is_follow, is_like_element, is_follow_element,
+                                   ret_dict, ele_type, ele_dict, comments_list)
     else:
         return JsonResponse({
             'errno': '405',
             'msg': '请求方式错误'})
 
 
+'''
+需要的参数：
+is_like: int 代表是否点击了点赞按钮，True/1代表是
+is_follow: int 代表是否点击了收藏按钮，True/1代表是
+is_delete: int 代表是否申请删除自己创建的资源内容，True/1代表是
+is_like_element: int 代表是否是点击了点赞资源按钮，True/1代表是
+is_follow_element: int 代表是否是点击了收藏资源按钮，True/1代表是
+（以上五个至多一个True，学习空间除了创建界面任何位置都能点击点赞收藏按钮）
+
+
+返回内容
+data：ret_dict
+element：该资源的字典
+comments_list：该资源的评论字典列表，新加key：commenter 评论者的用户字典（还没写，如果觉得麻烦我就拿出来，字典里面的字典确实难访问）
+'''
+
+
 def space_questions(request, space_id, questions_id):
     if request.method == 'POST':
-        return 0
+        ses = request.sessions
+        space = data.StudySpaces.objects.filter(space_id=space_id)
+        if space.count() == 0:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到学习空间'})
+        space = space[0]
+        perm = space_permissions_check(ses, space)
+        if perm <= 0:
+            return JsonResponse({
+                'errno': '403',
+                'msg': '非私有学习空间成员'})
+        question = data.SpaceQuestions.objects.filter(id=questions_id)
+        if question.count() != 1:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到待删除资源'})
+        question = question[0]
+        ret_dict = init_ret_dict(ses, space)
+
+        is_delete = request.POST.get('is_delete')
+        if is_delete:
+            if ses.get('user_id') is None:
+                return JsonResponse({
+                    'errno': '400',
+                    'msg': '尚未登录'})
+
+            if question.user_id != ses.get('user_id'):
+                return JsonResponse({
+                    'errno': '407',
+                    'msg': '待删除讨论不是当前用户所创建'})
+            question.delete()
+            return JsonResponse({
+                'errno': '200',
+                'msg': '删除成功'})
+
+        ele_type = '讨论'
+        ele_dict = model_to_dict(question)
+        ele_dict['likes'] = data.Likes.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
+        ele_dict['follows'] = data.Follows.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
+
+        ele_dict['ele_liked'] = False
+        ele_dict['ele_followed'] = False
+        if data.Likes.objects.filter(hosts=ses['user_id'],
+                                     liked_type=ele_type, liked_id=ele_dict['id']).count() == 1:
+            ele_dict['ele_liked'] = True
+        if data.Follows.objects.filter(following=ses['user_id'],
+                                       followed_type=ele_type, followed_id=ele_dict['id']).count() == 1:
+            ele_dict['ele_followed'] = True
+
+        comments_list = get_comments_list(space, ele_dict['id'], ele_type)
+        for each in comments_list:
+            commenter = data.User.objects.filter(id=each['user_id'])
+            if commenter.count() != 1:
+                return JsonResponse({
+                    'errno': '402',
+                    'msg': '评论者id不存在'})
+            each['commenter'] = model_to_dict(commenter)
+
+        is_like = request.POST.get('is_like')
+        is_follow = request.POST.get('is_follow')
+        is_like_element = request.POST.get('is_like_element')
+        is_follow_element = request.POST.get('is_follow_element')
+        return like_follow_element(space, ses, is_like, is_follow, is_like_element, is_follow_element,
+                                   ret_dict, ele_type, ele_dict, comments_list)
+
     else:
         return JsonResponse({
             'errno': '405',
@@ -817,7 +1060,71 @@ def space_questions(request, space_id, questions_id):
 
 def space_exercises(request, space_id, exercises_id):
     if request.method == 'POST':
-        return 0
+        ses = request.sessions
+        space = data.StudySpaces.objects.filter(space_id=space_id)
+        if space.count() == 0:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到学习空间'})
+        space = space[0]
+        perm = space_permissions_check(ses, space)
+        if perm <= 0:
+            return JsonResponse({
+                'errno': '403',
+                'msg': '非私有学习空间成员'})
+        exercise = data.SpaceExercises.objects.filter(id=exercises_id)
+        if exercise.count() != 1:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到待删除资源'})
+        exercise = exercise[0]
+        ret_dict = init_ret_dict(ses, space)
+
+        is_delete = request.POST.get('is_delete')
+        if is_delete:
+            if ses.get('user_id') is None:
+                return JsonResponse({
+                    'errno': '400',
+                    'msg': '尚未登录'})
+
+            if exercise.user_id != ses.get('user_id'):
+                return JsonResponse({
+                    'errno': '407',
+                    'msg': '待删除习题不是当前用户所创建'})
+            exercise.delete()
+            return JsonResponse({
+                'errno': '200',
+                'msg': '删除成功'})
+
+        ele_type = '习题'
+        ele_dict = model_to_dict(exercise)
+        ele_dict['likes'] = data.Likes.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
+        ele_dict['follows'] = data.Follows.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
+
+        ele_dict['ele_liked'] = False
+        ele_dict['ele_followed'] = False
+        if data.Likes.objects.filter(hosts=ses['user_id'],
+                                     liked_type=ele_type, liked_id=ele_dict['id']).count() == 1:
+            ele_dict['ele_liked'] = True
+        if data.Follows.objects.filter(following=ses['user_id'],
+                                       followed_type=ele_type, followed_id=ele_dict['id']).count() == 1:
+            ele_dict['ele_followed'] = True
+
+        comments_list = get_comments_list(space, ele_dict['id'], ele_type)
+        for each in comments_list:
+            commenter = data.User.objects.filter(id=each['user_id'])
+            if commenter.count() != 1:
+                return JsonResponse({
+                    'errno': '402',
+                    'msg': '评论者id不存在'})
+            each['commenter'] = model_to_dict(commenter)
+
+        is_like = request.POST.get('is_like')
+        is_follow = request.POST.get('is_follow')
+        is_like_element = request.POST.get('is_like_element')
+        is_follow_element = request.POST.get('is_follow_element')
+        return like_follow_element(space, ses, is_like, is_follow, is_like_element, is_follow_element,
+                                   ret_dict, ele_type, ele_dict, comments_list)
     else:
         return JsonResponse({
             'errno': '405',
@@ -826,7 +1133,71 @@ def space_exercises(request, space_id, exercises_id):
 
 def space_groups(request, space_id, groups_id):
     if request.method == 'POST':
-        return 0
+        ses = request.sessions
+        space = data.StudySpaces.objects.filter(space_id=space_id)
+        if space.count() == 0:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到学习空间'})
+        space = space[0]
+        perm = space_permissions_check(ses, space)
+        if perm <= 0:
+            return JsonResponse({
+                'errno': '403',
+                'msg': '非私有学习空间成员'})
+        group = data.SpaceGroups.objects.filter(id=groups_id)
+        if group.count() != 1:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到待删除资源'})
+        group = group[0]
+        ret_dict = init_ret_dict(ses, space)
+
+        is_delete = request.POST.get('is_delete')
+        if is_delete:
+            if ses.get('user_id') is None:
+                return JsonResponse({
+                    'errno': '400',
+                    'msg': '尚未登录'})
+
+            if group.user_id != ses.get('user_id'):
+                return JsonResponse({
+                    'errno': '407',
+                    'msg': '待删除习题不是当前用户所创建'})
+            group.delete()
+            return JsonResponse({
+                'errno': '200',
+                'msg': '删除成功'})
+
+        ele_type = '习题'
+        ele_dict = model_to_dict(group)
+        ele_dict['likes'] = data.Likes.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
+        ele_dict['follows'] = data.Follows.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
+
+        ele_dict['ele_liked'] = False
+        ele_dict['ele_followed'] = False
+        if data.Likes.objects.filter(hosts=ses['user_id'],
+                                     liked_type=ele_type, liked_id=ele_dict['id']).count() == 1:
+            ele_dict['ele_liked'] = True
+        if data.Follows.objects.filter(following=ses['user_id'],
+                                       followed_type=ele_type, followed_id=ele_dict['id']).count() == 1:
+            ele_dict['ele_followed'] = True
+
+        comments_list = get_comments_list(space, ele_dict['id'], ele_type)
+        for each in comments_list:
+            commenter = data.User.objects.filter(id=each['user_id'])
+            if commenter.count() != 1:
+                return JsonResponse({
+                    'errno': '402',
+                    'msg': '评论者id不存在'})
+            each['commenter'] = model_to_dict(commenter)
+
+        is_like = request.POST.get('is_like')
+        is_follow = request.POST.get('is_follow')
+        is_like_element = request.POST.get('is_like_element')
+        is_follow_element = request.POST.get('is_follow_element')
+        return like_follow_element(space, ses, is_like, is_follow, is_like_element, is_follow_element,
+                                   ret_dict, ele_type, ele_dict, comments_list)
     else:
         return JsonResponse({
             'errno': '405',
@@ -835,48 +1206,565 @@ def space_groups(request, space_id, groups_id):
 
 def space_notices(request, space_id, notices_id):
     if request.method == 'POST':
-        return 0
+        ses = request.sessions
+        space = data.StudySpaces.objects.filter(space_id=space_id)
+        if space.count() == 0:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到学习空间'})
+        space = space[0]
+        perm = space_permissions_check(ses, space)
+        if perm <= 0:
+            return JsonResponse({
+                'errno': '403',
+                'msg': '非私有学习空间成员'})
+        notice = data.SpaceNotices.objects.filter(id=notices_id)
+        if notice.count() != 1:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到待删除资源'})
+        notice = notice[0]
+        ret_dict = init_ret_dict(ses, space)
+
+        is_delete = request.POST.get('is_delete')
+        if is_delete:
+            if ses.get('user_id') is None:
+                return JsonResponse({
+                    'errno': '400',
+                    'msg': '尚未登录'})
+
+            if notice.user_id != ses.get('user_id'):
+                return JsonResponse({
+                    'errno': '407',
+                    'msg': '待删除习题不是当前用户所创建'})
+            notice.delete()
+            return JsonResponse({
+                'errno': '200',
+                'msg': '删除成功'})
+
+        ele_type = '公告'
+        ele_dict = model_to_dict(notice)
+
+        is_like = request.POST.get('is_like')
+        is_follow = request.POST.get('is_follow')
+        return like_follow_element(space, ses, is_like, is_follow, False, False,
+                                   ret_dict, ele_type, ele_dict, None)
     else:
         return JsonResponse({
             'errno': '405',
             'msg': '请求方式错误'})
 
 
+'''
+需要的参数：
+is_edit: 代表用户是否点击了提交编辑按钮（进入该路由不一定就是已经编辑完毕了） True/1代表是
+resource_name:string，没有改变可以不传、传null、传原数据
+introduction:string，没有改变可以不传、传null、传原数据
+file:资源文件，没有改变就不要传
+返回数据：
+data：ret_dict
+old_element：原资源字典（编辑以前最好显示原资源的内容）
+'''
+
+
 def space_resources_edit(request, space_id, resources_id):
+    if request.method == 'POST':
+        ses = request.sessions
+        if ses.get('user_id') is None:
+            return JsonResponse({
+                'errno': '400',
+                'msg': '尚未登录'
+            })
+        space = data.StudySpaces.objects.filter(space_id=space_id)
+        if space.count() == 0:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到学习空间'})
+        space = space[0]
+        perm = space_permissions_check(ses, space)
+        if perm <= 0:
+            return JsonResponse({
+                'errno': '403',
+                'msg': '非私有学习空间成员'})
+        resource = data.SpaceResources.objects.filter(id=resources_id)
+        if resource.count() != 1:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到资源'})
+        ret_dict = init_ret_dict(ses, space)
+        resource = resource[0]
+        ele_type = '资源'
+        ele_dict = model_to_dict(resource)
+
+        is_edit = request.POST.get('is_edit')
+        if is_edit is None:
+            return JsonResponse({
+                'errno': '401',
+                'msg': 'POST参数缺少is_edit'})
+        if is_edit:
+            resource_name = request.POST.get('resource_name')
+            introduction = request.POST.get('introduction')
+            file = request.FILE.get('file')
+            if resource_name:
+                resource.resource_name = resource_name
+            if introduction:
+                resource.introduction = introduction
+            if file is not None:
+                resource.file = file.read()
+            resource.last_update_time = get_time_now()
+            resource.save()
+            return JsonResponse({
+                'errno': '200',
+                'msg': '编辑元素成功',
+                'data': ret_dict,
+            })
+        else:
+            return JsonResponse({
+                'errno': '200',
+                'msg': '查询原元素成功',
+                'data': ret_dict,
+                'old_element': ele_dict,
+            })
+
+    else:
+        return JsonResponse({
+            'errno': '405',
+            'msg': '请求方式错误'})
+
+
+'''
+需要的参数：
+is_create: int
+
+返回数据：
+
+'''
+
+
+def space_resources_create(request, space_id):
+    if request.method == 'POST':
+        ses = request.sessions
+        if ses.get('user_id') is None:
+            return JsonResponse({
+                'errno': '400',
+                'msg': '尚未登录'
+            })
+        space = data.StudySpaces.objects.filter(space_id=space_id)
+        if space.count() == 0:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到学习空间'})
+        space = space[0]
+        perm = space_permissions_check(ses, space)
+        if perm <= 0:
+            return JsonResponse({
+                'errno': '403',
+                'msg': '非私有学习空间成员'})
+
+        ret_dict = init_ret_dict(ses, space)
+        is_create = request.POST.get('is_create')
+        if not is_create:
+            return JsonResponse({
+                'errno': '200',
+                'msg': '等待创建',
+                'data': ret_dict
+            })
+
+        resource_name = request.POST.get('resource_name')
+        introduction = request.POST.get('introduction')
+        file = request.FILE.get('file')
+        ret = exist_check(resource_name, introduction, file)
+        time_now = get_time_now()
+        if ret is not None:
+            return ret
+        new_resource = data.SpaceResources(
+            space_id=space_id,
+            user_id=ses['user_id'],
+            resource_name=resource_name,
+            introduction=introduction,
+            file=file.read(),
+            create_time=time_now,
+            last_update_time=time_now
+        )
+        new_resource.save()
+        return JsonResponse({
+            'errno': '200',
+            'msg': '创建元素成功',
+            'data': ret_dict,
+        })
+    else:
+        return JsonResponse({
+            'errno': '405',
+            'msg': '请求方式错误'})
+
+
+def space_questions_edit(request, space_id, questions_id):
+    if request.method == 'POST':
+        ses = request.sessions
+        if ses.get('user_id') is None:
+            return JsonResponse({
+                'errno': '400',
+                'msg': '尚未登录'
+            })
+        space = data.StudySpaces.objects.filter(space_id=space_id)
+        if space.count() == 0:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到学习空间'})
+        space = space[0]
+        perm = space_permissions_check(ses, space)
+        if perm <= 0:
+            return JsonResponse({
+                'errno': '403',
+                'msg': '非私有学习空间成员'})
+        question = data.SpaceQuestions.objects.filter(id=questions_id)
+        if question.count() != 1:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到讨论'})
+        ret_dict = init_ret_dict(ses, space)
+        question = question[0]
+        ele_type = '讨论'
+        ele_dict = model_to_dict(question)
+
+        is_edit = request.POST.get('is_edit')
+        if is_edit is None:
+            return JsonResponse({
+                'errno': '401',
+                'msg': 'POST参数缺少is_edit'})
+        if is_edit:
+            title = request.POST.get('title')
+            content = request.POST.get('content')
+            if title:
+                question.title = title
+            if content:
+                question.content = content
+            question.last_update_time = get_time_now()
+            question.save()
+
+            return JsonResponse({
+                'errno': '200',
+                'msg': '编辑成功',
+                'data': ret_dict,
+            })
+        else:
+            return JsonResponse({
+                'errno': '200',
+                'msg': '查询原元素成功',
+                'data': ret_dict,
+                'old_element': ele_dict,
+            })
+
+    else:
+        return JsonResponse({
+            'errno': '405',
+            'msg': '请求方式错误'})
+
+
+def space_questions_create(request, space_id):
+    if request.method == 'POST':
+        ses = request.sessions
+        if ses.get('user_id') is None:
+            return JsonResponse({
+                'errno': '400',
+                'msg': '尚未登录'
+            })
+        space = data.StudySpaces.objects.filter(space_id=space_id)
+        if space.count() == 0:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到学习空间'})
+        space = space[0]
+        perm = space_permissions_check(ses, space)
+        if perm <= 0:
+            return JsonResponse({
+                'errno': '403',
+                'msg': '非私有学习空间成员'})
+
+        ret_dict = init_ret_dict(ses, space)
+        is_create = request.POST.get('is_create')
+        if not is_create:
+            return JsonResponse({
+                'errno': '200',
+                'msg': '等待创建',
+                'data': ret_dict
+            })
+
+        title = request.POST.get('title')
+        content = request.POST.get('content')
+        ret = exist_check(title, content)
+        time_now = get_time_now()
+        if ret is not None:
+            return ret
+        new_question = data.SpaceQuestions(
+            space_id=space_id,
+            user_id=ses['user_id'],
+            title=title,
+            content=content,
+            create_time=time_now,
+            last_update_time=time_now
+        )
+        new_question.save()
+        return JsonResponse({
+            'errno': '200',
+            'msg': '创建元素成功',
+            'data': ret_dict,
+        })
+    else:
+        return JsonResponse({
+            'errno': '405',
+            'msg': '请求方式错误'})
+
+
+def space_exercises_edit(request, space_id, exercises_id):
+    if request.method == 'POST':
+        ses = request.sessions
+        if ses.get('user_id') is None:
+            return JsonResponse({
+                'errno': '400',
+                'msg': '尚未登录'
+            })
+        space = data.StudySpaces.objects.filter(space_id=space_id)
+        if space.count() == 0:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到学习空间'})
+        space = space[0]
+        perm = space_permissions_check(ses, space)
+        if perm <= 0:
+            return JsonResponse({
+                'errno': '403',
+                'msg': '非私有学习空间成员'})
+        exercise = data.SpaceExercises.objects.filter(id=exercises_id)
+        if exercise.count() != 1:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到讨论'})
+        ret_dict = init_ret_dict(ses, space)
+        exercise = exercise[0]
+        ele_type = '习题'
+        ele_dict = model_to_dict(exercise)
+
+        is_edit = request.POST.get('is_edit')
+        if is_edit is None:
+            return JsonResponse({
+                'errno': '401',
+                'msg': 'POST参数缺少is_edit'})
+        if is_edit:
+
+            content = request.POST.get('content')
+            exercise_type = request.POST.get('type')
+            difficulty = request.POST.get('difficulty')
+            answer = request.POST.get('answer')
+            if content:
+                exercise.content = content
+            if exercise_type:
+                exercise.type = exercise_type
+            if difficulty:
+                exercise.difficulty = difficulty
+            if answer:
+                exercise.answer = answer
+            exercise.last_update_time = get_time_now()
+            exercise.save()
+
+            return JsonResponse({
+                'errno': '200',
+                'msg': '编辑成功',
+                'data': ret_dict,
+            })
+        else:
+            return JsonResponse({
+                'errno': '200',
+                'msg': '查询原元素成功',
+                'data': ret_dict,
+                'old_element': ele_dict,
+            })
+
+    else:
+        return JsonResponse({
+            'errno': '405',
+            'msg': '请求方式错误'})
+
+
+def space_exercises_create(request, space_id):
+    if request.method == 'POST':
+        ses = request.sessions
+        if ses.get('user_id') is None:
+            return JsonResponse({
+                'errno': '400',
+                'msg': '尚未登录'
+            })
+        space = data.StudySpaces.objects.filter(space_id=space_id)
+        if space.count() == 0:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到学习空间'})
+        space = space[0]
+        perm = space_permissions_check(ses, space)
+        if perm <= 0:
+            return JsonResponse({
+                'errno': '403',
+                'msg': '非私有学习空间成员'})
+
+        ret_dict = init_ret_dict(ses, space)
+        is_create = request.POST.get('is_create')
+        if not is_create:
+            return JsonResponse({
+                'errno': '200',
+                'msg': '等待创建',
+                'data': ret_dict
+            })
+
+        exercise_type = request.POST.get('type')
+        content = request.POST.get('content')
+        difficulty = request.POST.get('difficulty')
+        answer = request.POST.get('answer')
+        ret = exist_check(exercise_type, content, difficulty, answer)
+        time_now = get_time_now()
+        if ret is not None:
+            return ret
+        new_question = data.SpaceQuestions(
+            space_id=space_id,
+            user_id=ses['user_id'],
+            content=content,
+            type=exercise_type,
+            difficulty=difficulty,
+            answer=answer,
+            create_time=time_now,
+            last_update_time=time_now
+        )
+        new_question.save()
+        return JsonResponse({
+            'errno': '200',
+            'msg': '创建元素成功',
+            'data': ret_dict,
+        })
+    else:
+        return JsonResponse({
+            'errno': '405',
+            'msg': '请求方式错误'})
+
+
+def space_groups_edit(request, space_id, groups_id):
     return 0
 
 
-def space_resources_create(request, space_id, resources_id):
+def space_groups_create(request, space_id):
     return 0
 
 
-def space_questions_edit(request, space_id, resources_id):
-    return 0
+def space_notices_edit(request, space_id, notices_id):
+    if request.method == 'POST':
+        ses = request.sessions
+        if ses.get('user_id') is None:
+            return JsonResponse({
+                'errno': '400',
+                'msg': '尚未登录'
+            })
+        space = data.StudySpaces.objects.filter(space_id=space_id)
+        if space.count() == 0:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到学习空间'})
+        space = space[0]
+        perm = space_permissions_check(ses, space)
+        if perm <= 0:
+            return JsonResponse({
+                'errno': '403',
+                'msg': '非私有学习空间成员'})
+        notice = data.SpaceNotices.objects.filter(id=notices_id)
+        if notice.count() != 1:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到讨论'})
+        ret_dict = init_ret_dict(ses, space)
+        notice = notice[0]
+        ele_type = '讨论'
+        ele_dict = model_to_dict(notice)
+
+        is_edit = request.POST.get('is_edit')
+        if is_edit is None:
+            return JsonResponse({
+                'errno': '401',
+                'msg': 'POST参数缺少is_edit'})
+        if is_edit:
+            title = request.POST.get('title')
+            content = request.POST.get('content')
+            ret = exist_check(title, content)
+            if ret is not None:
+                return ret
+            notice.last_update_time = get_time_now()
+            notice.save()
+
+            return JsonResponse({
+                'errno': '200',
+                'msg': '编辑成功',
+                'data': ret_dict,
+            })
+        else:
+            return JsonResponse({
+                'errno': '200',
+                'msg': '查询原元素成功',
+                'data': ret_dict,
+                'old_element': ele_dict,
+            })
+
+    else:
+        return JsonResponse({
+            'errno': '405',
+            'msg': '请求方式错误'})
 
 
-def space_questions_create(request, space_id, resources_id):
-    return 0
+def space_notices_create(request, space_id):
+    if request.method == 'POST':
+        ses = request.sessions
+        if ses.get('user_id') is None:
+            return JsonResponse({
+                'errno': '400',
+                'msg': '尚未登录'
+            })
+        space = data.StudySpaces.objects.filter(space_id=space_id)
+        if space.count() == 0:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到学习空间'})
+        space = space[0]
+        perm = space_permissions_check(ses, space)
+        if perm <= 0:
+            return JsonResponse({
+                'errno': '403',
+                'msg': '非私有学习空间成员'})
 
+        ret_dict = init_ret_dict(ses, space)
+        is_create = request.POST.get('is_create')
+        if not is_create:
+            return JsonResponse({
+                'errno': '200',
+                'msg': '等待创建',
+                'data': ret_dict
+            })
 
-def space_exercises_edit(request, space_id, resources_id):
-    return 0
-
-
-def space_exercises_create(request, space_id, resources_id):
-    return 0
-
-
-def space_groups_edit(request, space_id, resources_id):
-    return 0
-
-
-def space_groups_create(request, space_id, resources_id):
-    return 0
-
-
-def space_notices_edit(request, space_id, resources_id):
-    return 0
-
-
-def space_notices_create(request, space_id, resources_id):
-    return 0
+        title = request.POST.get('title')
+        content = request.POST.get('content')
+        ret = exist_check(title, content)
+        time_now = get_time_now()
+        if ret is not None:
+            return ret
+        new_notice = data.SpaceNotices(
+            space_id=space_id,
+            user_id=ses['user_id'],
+            title=title,
+            content=content,
+            create_time=time_now,
+            last_update_time=time_now
+        )
+        new_notice.save()
+        return JsonResponse({
+            'errno': '200',
+            'msg': '创建元素成功',
+            'data': ret_dict,
+        })
+    else:
+        return JsonResponse({
+            'errno': '405',
+            'msg': '请求方式错误'})

@@ -136,5 +136,14 @@ EMAIL_FROM = 'dingzhen@126.com>'
 # 这⾥必须是True，否则发送不成功
 EMAIL_USE_TLS = True
 
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
 FRONTEND = 'http://127.0.0.1:8090'
 BACKEND = 'http://127.0.0.1:8000'

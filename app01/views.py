@@ -49,7 +49,7 @@ def space_permissions_check(ses, space):
     if space.creator_id == ses.get('user_id'):
         return 3
     perm = space.space_permission
-    member = data.SpaceMembers.objects.filter(space_id=space.id, user_id=ses.get('user_id')).count()
+    member = data.SpaceMembers.objects.filter(space_id=space.id, user_id=ses.get('user_id'))
     if member.count() == 0 and perm != 0:
         return 0
     elif member.count() == 0 and perm == 0:
@@ -67,7 +67,8 @@ def get_comments_list(space, ele_id, ele_type):
     comments_set = data.SpaceComments.objects.filter(space_id=space.id, element_id=ele_id, comment_type=ele_type)
     c_list = []
     for each in comments_set:
-        each_dict = model_to_dict(each)
+        each_dict = model_to_dict(each, exclude=['create_time'])
+        each_dict['create_time'] = each.create_time
         each_dict['likes'] = data.Likes.objects.filter(liked_id=ele_id, liked_type=ele_type).count()
         each_dict['follows'] = data.Follows.objects.filter(followed_id=ele_id, followed_type=ele_type).count()
         c_list.append(each_dict)
@@ -76,13 +77,18 @@ def get_comments_list(space, ele_id, ele_type):
 
 def init_ret_dict(ses, space):
     admin_set = data.SpaceMembers.objects.filter(space_id=space.id, is_admin=1)
-    creator = data.User.objects.filter(id=space.creator_id)
+    creator = data.User.objects.filter(id=space.creator_id.id)[0]
     admin_list = [model_to_dict(creator)]
     for each in admin_set:
         each_dict = model_to_dict(each)
         admin_list.append(each_dict)
     ret_dict = {'space_name': space.space_name, 'space_index': space.space_index,
-                'space_introduction': space.space_introduction, 'space_picture': space.space_picture,
+                'space_introduction': space.space_introduction,
+
+                '''
+                'space_picture': space.space_picture,
+                '''
+                
                 'create_time': space.create_time,
                 'likes_num': data.SpaceLikes.objects.filter(space_id=space.id).count(),
                 'follows_num': data.SpaceFollows.objects.filter(space_id=space.id).count(),
@@ -260,7 +266,7 @@ def spaces_index(request):
         if method is None:
             return JsonResponse({
                 'errno': '401',
-                'msg': 'POST参数缺少order'})
+                'msg': 'POST参数缺少sort'})
         elif method == '最多点赞':
             order = 'id'
         elif method == '最多关注':
@@ -279,21 +285,23 @@ def spaces_index(request):
                 'msg': 'POST参数order不合法'})
         # 查询条件
         page = request.GET.get('page')
-        page = int(page)
         if page is None:
             return JsonResponse({
                 'errno': '401',
                 'msg': 'POST参数缺少page'})
+        page = int(page)
+
         query_list = []
         if recv.get('show') == '全部空间':
             query_set = data.StudySpaces.objects.all().order_by(order)
             for each in query_set:
-                each_dict = model_to_dict(each)
+                each_dict = model_to_dict(each, exclude=['space_picture'])
                 each_dict['likes'] = data.SpaceLikes.objects.filter(space_id=each_dict['id']).count()
                 each_dict['follows'] = data.SpaceFollows.objects.filter(space_id=each_dict['id']).count()
                 query_list.append(each_dict)
             total = len(query_list)
             query_list = order_query_list(query_list, method)
+            print(query_list[0])
             return JsonResponse({
                 'errno': '200',
                 'msg': '查询全部空间成功',
@@ -388,13 +396,13 @@ space_picture: 图片文件 新空间封面，为空则表示未上传，扩展�
 @csrf_exempt
 def space_create(request):
     ses = request.session
+
     if request.method == 'POST':
-        '''
         if ses.get('user_id') is None:
             return JsonResponse({
                 'errno': '400',
                 'msg': '尚未登录'})
-        '''
+        user_now = User.objects.get(id=int(ses.get('user_id')))
         is_create = request.POST.get('is_create')
         if is_create is None:
             return JsonResponse({
@@ -424,7 +432,7 @@ def space_create(request):
                                          space_permission=space_permission,
                                          create_time=create_time,
                                          last_update_time=create_time,
-                                         creator_id=ses['user_id'])
+                                         creator_id=user_now)
         else:
             extended_name = os.path.splitext(space_picture.name)[-1]
             allowed_name = ['.jpg', '.png']
@@ -438,7 +446,7 @@ def space_create(request):
                                          create_time=create_time,
                                          last_update_time=create_time,
                                          space_picture=space_picture,
-                                         creator_id=ses['user_id'])
+                                         creator_id=user_now)
         try:
             new_space.save()
         except RuntimeError:
@@ -472,7 +480,7 @@ data：ret_dict，包含学习空间需要显示信息的字典
 @csrf_exempt
 def space_main(request, space_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         space = data.StudySpaces.objects.filter(space_id=space_id)
         if space.count() == 0:
             return JsonResponse({
@@ -577,8 +585,8 @@ total：该学习空间资源总数
 @csrf_exempt
 def space_resources_index(request, space_id):
     if request.method == 'POST':
-        ses = request.sessions
-        space = data.StudySpaces.objects.filter(space_id=space_id)
+        ses = request.session
+        space = data.StudySpaces.objects.filter(id=space_id)
         if space.count() == 0:
             return JsonResponse({
                 'errno': '404',
@@ -591,17 +599,18 @@ def space_resources_index(request, space_id):
                 'msg': '非私有学习空间成员'})
         ret_dict = init_ret_dict(ses, space)
         page = request.GET.get('page')
-        page = int(page)
         if page is None:
             return JsonResponse({
                 'errno': '401',
-                'msg': 'POST参数缺少page'})
+                'msg': 'GET参数缺少page'})
+        page = int(page)
+
         query_list = []
         method = request.GET.get('sort')
         if method is None:
             return JsonResponse({
                 'errno': '401',
-                'msg': 'POST参数缺少order'})
+                'msg': 'GET参数缺少sort'})
         elif method == '最多点赞':
             order = '-id'
         elif method == '资源标题':
@@ -617,7 +626,7 @@ def space_resources_index(request, space_id):
         resources_set = data.SpaceResources.objects.filter(space_id=space.id).order_by(order)
         total = resources_set.count()
         for each in resources_set:
-            each_dict = model_to_dict(each)
+            each_dict = model_to_dict(each, exclude=['file'])
             each_dict['likes'] = data.Likes.objects.filter(liked_type='资源', liked_id=each_dict['id']).count()
             each_dict['follows'] = data.Follows.objects.filter(liked_type='资源', liked_id=each_dict['id']).count()
             query_list.append(each_dict)
@@ -655,7 +664,7 @@ is_follow: int 代表是否点击了收藏按钮，True/1代表是
 @csrf_exempt
 def space_groups_index(request, space_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         space = data.StudySpaces.objects.filter(space_id=space_id)
         if space.count() == 0:
             return JsonResponse({
@@ -669,11 +678,11 @@ def space_groups_index(request, space_id):
                 'msg': '非私有学习空间成员'})
         ret_dict = init_ret_dict(ses, space)
         page = request.GET.get('page')
-        page = int(page)
         if page is None:
             return JsonResponse({
                 'errno': '401',
                 'msg': 'POST参数缺少page'})
+        page = int(page)
 
         query_list = []
         groups_set = data.SpaceGroups.objects.filter(space_id=space.id)
@@ -705,9 +714,10 @@ def space_groups_index(request, space_id):
 '''
 
 
+@csrf_exempt
 def space_questions_index(request, space_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         space = data.StudySpaces.objects.filter(space_id=space_id)
         if space.count() == 0:
             return JsonResponse({
@@ -721,11 +731,11 @@ def space_questions_index(request, space_id):
                 'msg': '非私有学习空间成员'})
         ret_dict = init_ret_dict(ses, space)
         page = request.GET.get('page')
-        page = int(page)
         if page is None:
             return JsonResponse({
                 'errno': '401',
                 'msg': 'POST参数缺少page'})
+        page = int(page)
 
         method = request.GET.get('sort')
         if method is None:
@@ -771,9 +781,10 @@ def space_questions_index(request, space_id):
 '''
 
 
+@csrf_exempt
 def space_exercises_index(request, space_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         space = data.StudySpaces.objects.filter(space_id=space_id)
         if space.count() == 0:
             return JsonResponse({
@@ -787,11 +798,12 @@ def space_exercises_index(request, space_id):
                 'msg': '非私有学习空间成员'})
         ret_dict = init_ret_dict(ses, space)
         page = request.GET.get('page')
-        page = int(page)
         if page is None:
             return JsonResponse({
                 'errno': '401',
                 'msg': 'POST参数缺少page'})
+        page = int(page)
+
         query_list = []
         exercises_set = data.SpaceExercises.objects.filter(space_id=space_id)
         total = exercises_set.count()
@@ -812,9 +824,10 @@ def space_exercises_index(request, space_id):
             'msg': '请求方式错误'})
 
 
+@csrf_exempt
 def space_notices_index(request, space_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         space = data.StudySpaces.objects.filter(space_id=space_id)
         if space.count() == 0:
             return JsonResponse({
@@ -828,11 +841,12 @@ def space_notices_index(request, space_id):
                 'msg': '非私有学习空间成员'})
         ret_dict = init_ret_dict(ses, space)
         page = request.GET.get('page')
-        page = int(page)
         if page is None:
             return JsonResponse({
                 'errno': '401',
                 'msg': 'POST参数缺少page'})
+        page = int(page)
+
         query_list = []
         notices_set = data.SpaceNotices.objects.filter(space_id=space_id).order_by('-last_update_time')
         total = notices_set.count()
@@ -870,7 +884,7 @@ comments_list：该资源的评论字典列表，新加key：commenter 评论者
 @csrf_exempt
 def space_resources(request, space_id, resources_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         space = data.StudySpaces.objects.filter(space_id=space_id)
         if space.count() == 0:
             return JsonResponse({
@@ -958,9 +972,10 @@ comments_list：该资源的评论字典列表，新加key：commenter 评论者
 '''
 
 
+@csrf_exempt
 def space_questions(request, space_id, questions_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         space = data.StudySpaces.objects.filter(space_id=space_id)
         if space.count() == 0:
             return JsonResponse({
@@ -1032,9 +1047,10 @@ def space_questions(request, space_id, questions_id):
             'msg': '请求方式错误'})
 
 
+@csrf_exempt
 def space_exercises(request, space_id, exercises_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         space = data.StudySpaces.objects.filter(space_id=space_id)
         if space.count() == 0:
             return JsonResponse({
@@ -1105,9 +1121,10 @@ def space_exercises(request, space_id, exercises_id):
             'msg': '请求方式错误'})
 
 
+@csrf_exempt
 def space_groups(request, space_id, groups_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         space = data.StudySpaces.objects.filter(space_id=space_id)
         if space.count() == 0:
             return JsonResponse({
@@ -1178,9 +1195,10 @@ def space_groups(request, space_id, groups_id):
             'msg': '请求方式错误'})
 
 
+@csrf_exempt
 def space_notices(request, space_id, notices_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         space = data.StudySpaces.objects.filter(space_id=space_id)
         if space.count() == 0:
             return JsonResponse({
@@ -1241,9 +1259,10 @@ old_element：原资源字典（编辑以前最好显示原资源的内容）
 '''
 
 
+@csrf_exempt
 def space_resources_edit(request, space_id, resources_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         if ses.get('user_id') is None:
             return JsonResponse({
                 'errno': '400',
@@ -1315,9 +1334,10 @@ is_create: int
 '''
 
 
+@csrf_exempt
 def space_resources_create(request, space_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         if ses.get('user_id') is None:
             return JsonResponse({
                 'errno': '400',
@@ -1372,9 +1392,10 @@ def space_resources_create(request, space_id):
             'msg': '请求方式错误'})
 
 
+@csrf_exempt
 def space_questions_edit(request, space_id, questions_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         if ses.get('user_id') is None:
             return JsonResponse({
                 'errno': '400',
@@ -1435,9 +1456,10 @@ def space_questions_edit(request, space_id, questions_id):
             'msg': '请求方式错误'})
 
 
+@csrf_exempt
 def space_questions_create(request, space_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         if ses.get('user_id') is None:
             return JsonResponse({
                 'errno': '400',
@@ -1490,9 +1512,10 @@ def space_questions_create(request, space_id):
             'msg': '请求方式错误'})
 
 
+@csrf_exempt
 def space_exercises_edit(request, space_id, exercises_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         if ses.get('user_id') is None:
             return JsonResponse({
                 'errno': '400',
@@ -1560,9 +1583,10 @@ def space_exercises_edit(request, space_id, exercises_id):
             'msg': '请求方式错误'})
 
 
+@csrf_exempt
 def space_exercises_create(request, space_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         if ses.get('user_id') is None:
             return JsonResponse({
                 'errno': '400',
@@ -1627,9 +1651,10 @@ def space_groups_create(request, space_id):
     return 0
 
 
+@csrf_exempt
 def space_notices_edit(request, space_id, notices_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         if ses.get('user_id') is None:
             return JsonResponse({
                 'errno': '400',
@@ -1689,9 +1714,10 @@ def space_notices_edit(request, space_id, notices_id):
             'msg': '请求方式错误'})
 
 
+@csrf_exempt
 def space_notices_create(request, space_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         if ses.get('user_id') is None:
             return JsonResponse({
                 'errno': '400',
@@ -1753,9 +1779,10 @@ edit_high: 1/0
 '''
 
 
+@csrf_exempt
 def space_setting(request, space_id):
     if request.method == 'POST':
-        ses = request.sessions
+        ses = request.session
         if ses.get('user_id') is None:
             return JsonResponse({
                 'errno': '400',
@@ -1816,30 +1843,31 @@ def register(request):
         password1 = json.loads(request.body)['password1']
         password2 = json.loads(request.body)['password2']
         email = json.loads(request.body)['email']
-
+        print("ok")
         user_exist = User.objects.filter(username=username)
-
         if user_exist:
             return JsonResponse({'error': 1002, 'msg': '用户名已存在!'})
-
+        print("ok")
         email_exist = User.objects.filter(email=email)
-
+        print("ok")
         if email_exist:
             return JsonResponse({'error': 1003, 'msg': '邮箱已存在!'})
-
+        print("ok")
         # 检查密码，要求：8-18字符，英文字母+数字
         if not re.match('^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,18}$', password1):
             return JsonResponse({'error': 1004, 'msg': '密码不合格!'})
 
         if password2 != password1:
             return JsonResponse({'error': 1005, 'msg': '两次输入密码不一致!'})
-
+        print("ok")
         new_user = User()
         new_user.username = username
         new_user.password = password1
         new_user.email = email
         new_user.intro = "我们走，学报"
+        print("ok")
         new_user.save()
+        print("ok")
 
         code = make_confirm_string(new_user)
         try:

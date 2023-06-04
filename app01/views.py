@@ -250,51 +250,37 @@ def spaces_index(request):
     ses = request.session
     if request.method == 'POST':
         recv = request.POST
-        order = {}
-        method = recv.get('order')
+        method = request.GET.get('sort')
         if method is None:
             return JsonResponse({
                 'errno': '401',
                 'msg': 'POST参数缺少order'})
         elif method == '最多点赞':
-            order['orderby_table'] = 'StudySpaces'
-            order['orderby_object'] = 'pk'
-            order['orderby'] = ''  # 升序
+            order = 'id'
         elif method == '最多关注':
-            order['orderby_table'] = 'StudySpaces'
-            order['orderby_object'] = 'pk'
-            order['orderby'] = ''  # 升序
+            order = 'id'
         elif method == '最近更新':
-            order['orderby_table'] = 'StudySpaces'
-            order['orderby_object'] = 'last_update_time'
-            order['orderby'] = '-'  # 降序
+            order = '-last_update_time'
         elif method == '最早更新':
-            order['orderby_table'] = 'StudySpaces'
-            order['orderby_object'] = 'last_update_time'
-            order['orderby'] = ''  # 升序
+            order = 'last_update_time'
         elif method == '最近创建':
-            order['orderby_table'] = 'StudySpaces'
-            order['orderby_object'] = 'create_time'
-            order['orderby'] = '-'  # 降序
+            order = '-create_time'
         elif method == '最早创建':
-            order['orderby_table'] = 'StudySpaces'
-            order['orderby_object'] = 'create_time'
-            order['orderby'] = ''  # 升序
+            order = 'create_time'
         else:
             return JsonResponse({
                 'errno': '401',
                 'msg': 'POST参数order不合法'})
         # 查询条件
-        page = request.POST.get('page')
+        page = request.GET.get('page')
+        page = int(page)
         if page is None:
             return JsonResponse({
                 'errno': '401',
                 'msg': 'POST参数缺少page'})
         query_list = []
         if recv.get('show') == '全部空间':
-            query_set = data.StudySpaces.objects.all.order_by(order['orderby'] +
-                                                              order['orderby_table'] + '__' +
-                                                              order['orderby_object'])
+            query_set = data.StudySpaces.objects.all().order_by(order)
             for each in query_set:
                 each_dict = model_to_dict(each)
                 each_dict['likes'] = data.SpaceLikes.objects.filter(space_id=each_dict['id']).count()
@@ -337,9 +323,7 @@ def spaces_index(request):
                     'errno': '400',
                     'msg': '尚未登录'})
             id_set = data.Follows.objects.filter(user_id=ses['user_id']).values('space_id')
-            space_set = data.StudySpaces.objects.all.order_by(order['orderby'] +
-                                                              order['orderby_table'] + '__' +
-                                                              order['orderby_object'])
+            space_set = data.StudySpaces.objects.all.order_by(order)
             for each in space_set:
                 if each.id == id_set.space_id:
                     each_dict = model_to_dict(each)
@@ -360,9 +344,7 @@ def spaces_index(request):
                 return JsonResponse({
                     'errno': '400',
                     'msg': '尚未登录'})
-            space_set = data.StudySpaces.objects.filter(user_id=ses['user_id']).order_by(order['orderby'] +
-                                                                                         order['orderby_table'] + '__' +
-                                                                                         order['orderby_object'])
+            space_set = data.StudySpaces.objects.filter(user_id=ses['user_id']).order_by(order)
             for each in space_set:
                 each_dict = model_to_dict(each)
                 each_dict['likes'] = data.SpaceLikes.objects.filter(space_id=each_dict['id']).count()
@@ -441,13 +423,12 @@ def space_create(request):
                 return JsonResponse({
                     'errno': '402',
                     'msg': '上传图片后缀名不合法'})
-            file_data = space_picture.read()
             new_space = data.StudySpaces(space_name=space_name,
                                          space_introduction=space_introduction,
                                          space_permission=space_permission,
                                          create_time=create_time,
                                          last_update_time=create_time,
-                                         space_picture=file_data)
+                                         space_picture=space_picture)
         try:
             new_space.save()
         except RuntimeError:
@@ -599,41 +580,31 @@ def space_resources_index(request, space_id):
                 'errno': '403',
                 'msg': '非私有学习空间成员'})
         ret_dict = init_ret_dict(ses, space)
-        page = request.POST.get('page')
+        page = request.GET.get('page')
+        page = int(page)
         if page is None:
             return JsonResponse({
                 'errno': '401',
                 'msg': 'POST参数缺少page'})
         query_list = []
-        method = request.POST.get('order')
-        order = {}
+        method = request.GET.get('sort')
         if method is None:
             return JsonResponse({
                 'errno': '401',
                 'msg': 'POST参数缺少order'})
         elif method == '最多点赞':
-            order['orderby_table'] = 'SpaceResources'
-            order['orderby_object'] = 'pk'
-            order['orderby'] = ''  # 降序
+            order = '-id'
         elif method == '资源标题':
-            order['orderby_table'] = 'SpaceResources'
-            order['orderby_object'] = 'resource_name'
-            order['orderby'] = '-'  # 降序
+            order = '-resource_name'
         elif method == '最近更新':
-            order['orderby_table'] = 'SpaceResources'
-            order['orderby_object'] = 'last_update_time'
-            order['orderby'] = '-'  # 降序
+            order = '-last_update_time'
         elif method == '最早更新':
-            order['orderby_table'] = 'SpaceResources'
-            order['orderby_object'] = 'last_update_time'
-            order['orderby'] = ''  # 升序
+            order = 'last_update_time'
         else:
             return JsonResponse({
                 'errno': '401',
                 'msg': 'POST参数order不合法'})
-        resources_set = data.SpaceResources.objects.filter(space_id=space.id).order_by(order['orderby'] +
-                                                                                       order['orderby_table'] + '__' +
-                                                                                       order['orderby_object'])
+        resources_set = data.SpaceResources.objects.filter(space_id=space.id).order_by(order)
         total = resources_set.count()
         for each in resources_set:
             each_dict = model_to_dict(each)
@@ -687,7 +658,8 @@ def space_groups_index(request, space_id):
                 'errno': '403',
                 'msg': '非私有学习空间成员'})
         ret_dict = init_ret_dict(ses, space)
-        page = request.POST.get('page')
+        page = request.GET.get('page')
+        page = int(page)
         if page is None:
             return JsonResponse({
                 'errno': '401',
@@ -738,43 +710,33 @@ def space_questions_index(request, space_id):
                 'errno': '403',
                 'msg': '非私有学习空间成员'})
         ret_dict = init_ret_dict(ses, space)
-        page = request.POST.get('page')
+        page = request.GET.get('page')
+        page = int(page)
         if page is None:
             return JsonResponse({
                 'errno': '401',
                 'msg': 'POST参数缺少page'})
 
-        method = request.POST.get('order')
-        order = {}
+        method = request.GET.get('sort')
         if method is None:
             return JsonResponse({
                 'errno': '401',
                 'msg': 'POST参数缺少order'})
         elif method == '最多点赞':
-            order['orderby_table'] = 'SpaceQuestions'
-            order['orderby_object'] = 'pk'
-            order['orderby'] = ''
+            order = 'id'
         elif method == '最多讨论':
-            order['orderby_table'] = 'SpaceQuestions'
-            order['orderby_object'] = 'pk'
-            order['orderby'] = ''
+            order = 'id'
         elif method == '最近更新':
-            order['orderby_table'] = 'SpaceQuestions'
-            order['orderby_object'] = 'last_update_time'
-            order['orderby'] = '-'
+            order = '-last_update_time'
         elif method == '最新创建':
-            order['orderby_table'] = 'SpaceQuestions'
-            order['orderby_object'] = 'create_time'
-            order['orderby'] = '-'
+            order = '-create_time'
         else:
             return JsonResponse({
                 'errno': '401',
                 'msg': 'POST参数order不合法'})
 
         query_list = []
-        questions_set = data.SpaceQuestions.objects.filter(space_id=space_id).order_by(order['orderby'] +
-                                                                                       order['orderby_table'] + '__' +
-                                                                                       order['orderby_object'])
+        questions_set = data.SpaceQuestions.objects.filter(space_id=space_id).order_by(order)
         total = questions_set.count()
         for each in questions_set:
             each_dict = model_to_dict(each)
@@ -814,7 +776,8 @@ def space_exercises_index(request, space_id):
                 'errno': '403',
                 'msg': '非私有学习空间成员'})
         ret_dict = init_ret_dict(ses, space)
-        page = request.POST.get('page')
+        page = request.GET.get('page')
+        page = int(page)
         if page is None:
             return JsonResponse({
                 'errno': '401',
@@ -854,7 +817,8 @@ def space_notices_index(request, space_id):
                 'errno': '403',
                 'msg': '非私有学习空间成员'})
         ret_dict = init_ret_dict(ses, space)
-        page = request.POST.get('page')
+        page = request.GET.get('page')
+        page = int(page)
         if page is None:
             return JsonResponse({
                 'errno': '401',
@@ -1310,7 +1274,7 @@ def space_resources_edit(request, space_id, resources_id):
             if introduction:
                 resource.introduction = introduction
             if file is not None:
-                resource.file = file.read()
+                resource.file = file
             resource.last_update_time = get_time_now()
             resource.save()
             return JsonResponse({
@@ -1382,7 +1346,7 @@ def space_resources_create(request, space_id):
             user_id=ses['user_id'],
             resource_name=resource_name,
             introduction=introduction,
-            file=file.read(),
+            file=file,
             create_time=time_now,
             last_update_time=time_now
         )
@@ -1764,6 +1728,63 @@ def space_notices_create(request, space_id):
             'msg': '创建元素成功',
             'data': ret_dict,
         })
+    else:
+        return JsonResponse({
+            'errno': '405',
+            'msg': '请求方式错误'})
+
+
+'''
+需要的参数
+edit_normal: 1/0
+edit_member: 1/0
+edit_admin: 1/0
+edit_high: 1/0
+'''
+def space_setting(request, space_id):
+    if request.method == 'POST':
+        ses = request.sessions
+        if ses.get('user_id') is None:
+            return JsonResponse({
+                'errno': '400',
+                'msg': '尚未登录'
+            })
+        space = data.StudySpaces.objects.filter(space_id=space_id)
+        if space.count() == 0:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到学习空间'})
+        space = space[0]
+        perm = space_permissions_check(ses, space)
+        if perm <= 1:
+            return JsonResponse({
+                'errno': '403',
+                'msg': '非管理员不可修改空间'})
+
+        ret_dict = init_ret_dict(ses, space)
+        if request.POST.get('edit_normal') == '1':
+            return 0
+        elif request.POST.get('edit_member') == '1':
+
+        elif request.POST.get('edit_admin') == '1':
+            if perm <= 2:
+                return JsonResponse({
+                    'errno': '403',
+                    'msg': '非创建者不可修改空间管理员'})
+        elif request.POST.get('edit_high') == '1':
+            if perm <= 2:
+                return JsonResponse({
+                    'errno': '403',
+                    'msg': '非创建者不可修改空间高级设置'})
+        else:
+            return JsonResponse({
+                'errno': '200',
+                'msg': '进入设置页面成功',
+                'data': ret_dict,
+            })
+
+
+
     else:
         return JsonResponse({
             'errno': '405',

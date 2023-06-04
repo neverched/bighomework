@@ -22,10 +22,10 @@ class User(models.Model):
 
 class Activities(models.Model):
     id = models.AutoField(primary_key=True)
-    hosts = models.ForeignKey("User", on_delete=models.CASCADE)
-    type = models.CharField(max_length=50)
-    create_time = models.DateField(auto_now=True)
-    programs = models.CharField(max_length=256)
+    hosts = models.ForeignKey("User", on_delete=models.CASCADE, default="")
+    type = models.CharField(max_length=50, default="")
+    create_time = models.DateField(auto_now=True, default="")
+    programs = models.CharField(max_length=256, default="")
 
     class Meta:
         db_table = 'Activities'
@@ -33,10 +33,10 @@ class Activities(models.Model):
 
 class Notices(models.Model):
     id = models.AutoField(primary_key=True)
-    hosts = models.ForeignKey("User", on_delete=models.CASCADE)
-    notice_type = models.CharField(max_length=256)
-    notice_id = models.IntegerField(verbose_name="通知内容（评论等）的ID")
-    notice_title = models.CharField(max_length=256)
+    hosts = models.ForeignKey("User", on_delete=models.CASCADE, default="")
+    notice_type = models.CharField(max_length=256, default="")
+    notice_id = models.IntegerField(verbose_name="通知内容（评论等）的ID", default="")
+    notice_title = models.CharField(max_length=256, default="")
     create_time = models.DateField(auto_now=True)
 
     class Meta:
@@ -93,8 +93,8 @@ class StudySpaces(models.Model):
     id = models.AutoField(primary_key=True)
     space_name = models.CharField(max_length=50)
     space_introduction = models.CharField(max_length=200)
-    space_index = models.CharField(max_length=1000)  # 主页内容
-    space_picture = models.BinaryField()  # 学习空间封面图片
+    space_index = models.CharField(max_length=1000, default="")  # 主页内容
+    space_picture = models.FileField(default="")  # 学习空间封面图片
     space_permission = models.IntegerField()  # 0为公开,非0为私有
     create_time = models.DateTimeField()
     last_update_time = models.DateTimeField()
@@ -123,7 +123,7 @@ class SpaceResources(models.Model):
     user_id = models.ForeignKey('User', on_delete=models.CASCADE)
     resource_name = models.CharField(max_length=100)
     introduction = models.CharField(max_length=500)
-    file = models.BinaryField()
+    file = models.FileField()
     create_time = models.DateTimeField()
     last_update_time = models.DateTimeField()
 

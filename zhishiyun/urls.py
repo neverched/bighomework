@@ -15,7 +15,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, re_path
-
 from app01 import views
 
 urlpatterns = [
@@ -49,4 +48,26 @@ urlpatterns = [
     re_path(r"^spaces/<int:space_id>/exercises/new/$", views.space_exercises_create),
     re_path(r"^spaces/<int:space_id>/groups/new/$", views.space_groups_create),
     re_path(r"^spaces/<int:space_id>/notices/new/$", views.space_notices_create),
+    path('register', views.register),  # 指定register函数的路由为register
+    path('register/confirm', views.user_confirm),
+    path('login', views.login),
+    path('logout', views.logout),
+    path('changepassword', views.change_password),
+    path('user/<uid>/', views.get_info),
+    path('user/<uid>/edit', views.edit_info),
+    path('user/<uid>/activities', views.get_activities),
+    path('user/<uid>/adminspaces', views.get_admin_spaces),
+    path('user/<uid>/followspaces', views.get_follow_spaces),
+    path('user/<uid>/resources', views.get_resources),
+    path('user/<uid>/questions', views.get_questions),
+    path('user/<uid>/exercises', views.get_exercises),
+    path('user/<uid>/collects/resources', views.get_collects_resources),
+    path('user/<uid>/collects/questions', views.get_collects_questions),
+    path('user/<uid>/collects/answers', views.get_collects_answers),
+    path('user/<uid>/collects/exercises', views.get_collects_exercises),
+    path('user/<uid>/followings', views.get_followings),
+    path('user/<uid>/fans', views.get_fans),
+    path('user/<uid>/follow', views.follow_people),
+    # path('postarticle', postarticle),
+    # path('search',search)
 ]

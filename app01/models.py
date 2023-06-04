@@ -3,29 +3,47 @@ from django.db import models
 
 # Create your models here.
 class User(models.Model):
-    id = models.AutoField(primary_key=True)
-    username = models.CharField(max_length=128, unique=True, default="")
-    email = models.EmailField(unique=True, default="")
+    username = models.CharField(max_length=128, unique=True)
+    email = models.EmailField(unique=True)
     password = models.CharField(max_length=256, default="")
-    gender = models.IntegerField(default=0)  # 0代表女，1代表男
+    gender = models.IntegerField(default=0)
     intro = models.CharField(max_length=256, default="")
     organization = models.CharField(max_length=50, verbose_name="所属组织", default="")
-    address = models.CharField(max_length=256, default="")  # 地址
+    destination = models.CharField(max_length=256, default="")
     job = models.CharField(max_length=256, default="")
     followers = models.IntegerField(default=0, verbose_name="粉丝数")
+    followings = models.IntegerField(default=0, verbose_name="关注数")
     like = models.IntegerField(default=0, verbose_name="点赞数")
     tags = models.CharField(max_length=256, default="")
+    confirmed = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'User'
 
 
+
+
+class ConfirmString(models.Model):
+    code = models.CharField(max_length=256)
+    user = models.OneToOneField('User', on_delete=models.CASCADE)
+    c_time = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.user.username + ":" + self.code
+
+    class Meta:
+        db_table = 'tb_confirmCode'
+        ordering = ['-c_time']
+        verbose_name = '确认码'
+        verbose_name_plural = verbose_name
+
+
 class Activities(models.Model):
-    id = models.AutoField(primary_key=True)
-    hosts = models.ForeignKey("User", on_delete=models.CASCADE, default="")
-    type = models.CharField(max_length=50, default="")
-    create_time = models.DateField(auto_now=True, default="")
-    programs = models.CharField(max_length=256, default="")
+    hosts = models.ForeignKey("User", on_delete=models.CASCADE)
+    type = models.CharField(max_length=50)
+    create_time = models.DateTimeField(auto_now_add=True)
+    programs = models.CharField(max_length=256)
+    t_id = models.IntegerField(default=0)
 
     class Meta:
         db_table = 'Activities'
@@ -49,7 +67,7 @@ class Collects(models.Model):
     collect_type = models.CharField(max_length=256)
     collect_id = models.IntegerField(verbose_name="通知内容（评论等）的ID")
     collect_title = models.CharField(max_length=256)
-    create_time = models.DateField(auto_now=True)
+    create_time = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'Collects'
@@ -61,10 +79,11 @@ class Follows(models.Model):
     # followed = models.ForeignKey("User", on_delete=models.CASCADE, verbose_name="被关注者")
     followed_type = models.CharField(max_length=50)
     followed_id = models.IntegerField(verbose_name="关注的人/学习空间id")
-    create_time = models.DateField(auto_now=True)
+    create_time = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'Follows'
+
 
 
 class Mails(models.Model):  # 私信
@@ -72,7 +91,7 @@ class Mails(models.Model):  # 私信
     texts = models.TextField()
     user1 = models.ForeignKey("User", on_delete=models.CASCADE)
     user2 = models.IntegerField()
-    texts_time = models.DateField(auto_now=True)
+    texts_time = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'Mails'
@@ -112,7 +131,6 @@ class SpaceNotices(models.Model):
     content = models.CharField(max_length=500)
     create_time = models.DateTimeField()
     last_update_time = models.DateTimeField()
-
     class Meta:
         db_table = 'Space_Notices'
 

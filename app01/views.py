@@ -1,4 +1,3 @@
-
 import os
 
 from django.forms import model_to_dict
@@ -7,13 +6,13 @@ from django.views.decorators.csrf import csrf_exempt
 import app01.models as data
 import time
 
-
 import datetime
 import json
 import re
 
-
 from django.http import JsonResponse
+
+
 # Create your views here.
 
 
@@ -390,10 +389,12 @@ space_picture: 图片文件 新空间封面，为空则表示未上传，扩展�
 def space_create(request):
     ses = request.session
     if request.method == 'POST':
+        '''
         if ses.get('user_id') is None:
             return JsonResponse({
                 'errno': '400',
                 'msg': '尚未登录'})
+        '''
         is_create = request.POST.get('is_create')
         if is_create is None:
             return JsonResponse({
@@ -422,7 +423,8 @@ def space_create(request):
                                          space_introduction=space_introduction,
                                          space_permission=space_permission,
                                          create_time=create_time,
-                                         last_update_time=create_time)
+                                         last_update_time=create_time,
+                                         creator_id=ses['user_id'])
         else:
             extended_name = os.path.splitext(space_picture.name)[-1]
             allowed_name = ['.jpg', '.png']
@@ -435,7 +437,8 @@ def space_create(request):
                                          space_permission=space_permission,
                                          create_time=create_time,
                                          last_update_time=create_time,
-                                         space_picture=space_picture)
+                                         space_picture=space_picture,
+                                         creator_id=ses['user_id'])
         try:
             new_space.save()
         except RuntimeError:
@@ -1748,6 +1751,8 @@ edit_member: 1/0
 edit_admin: 1/0
 edit_high: 1/0
 '''
+
+
 def space_setting(request, space_id):
     if request.method == 'POST':
         ses = request.sessions
@@ -1789,8 +1794,6 @@ def space_setting(request, space_id):
                 'msg': '进入设置页面成功',
                 'data': ret_dict,
             })
-
-
 
     else:
         return JsonResponse({
@@ -1890,6 +1893,7 @@ def login(request):
             if not user.confirmed:
                 return JsonResponse({'error': 1010, 'msg': "未确认"})
             request.session['uid'] = user.id  # 密码正确则将用户名存储于session（django用于存储登录信息的数据库位置）
+            request.session['user_id'] = user.id
             return JsonResponse({'error': 1, 'msg': "登录成功"})
         else:
             return JsonResponse({'error': 1002, 'msg': "密码错误"})

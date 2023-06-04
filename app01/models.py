@@ -21,8 +21,6 @@ class User(models.Model):
         db_table = 'User'
 
 
-
-
 class ConfirmString(models.Model):
     code = models.CharField(max_length=256)
     user = models.OneToOneField('User', on_delete=models.CASCADE)
@@ -85,7 +83,6 @@ class Follows(models.Model):
         db_table = 'Follows'
 
 
-
 class Mails(models.Model):  # 私信
     id = models.AutoField(primary_key=True)
     texts = models.TextField()
@@ -131,6 +128,7 @@ class SpaceNotices(models.Model):
     content = models.CharField(max_length=500)
     create_time = models.DateTimeField()
     last_update_time = models.DateTimeField()
+
     class Meta:
         db_table = 'Space_Notices'
 

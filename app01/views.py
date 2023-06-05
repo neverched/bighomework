@@ -689,7 +689,7 @@ def space_resources_index(request, space_id):
         for each in resources_set:
             each_dict = model_to_dict(each, exclude=['file'])
             each_dict['likes'] = data.Likes.objects.filter(liked_type='资源', liked_id=each_dict['id']).count()
-            each_dict['follows'] = data.Follows.objects.filter(liked_type='资源', liked_id=each_dict['id']).count()
+            each_dict['follows'] = data.Follows.objects.filter(followed_type='资源', followed_id=each_dict['id']).count()
             query_list.append(each_dict)
         query_list = order_query_list(query_list, method)
 

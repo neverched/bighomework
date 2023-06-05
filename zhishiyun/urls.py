@@ -37,11 +37,11 @@ urlpatterns = [
     path("spaces/<int:space_id>/groups/<int:groups_id>", views.space_groups),
     path("spaces/<int:space_id>/notices/<int:notices_id>", views.space_notices),
 
-    path("spaces/<int:space_id>/resources/<int:resources_id>/edit", views.space_resources_create),
-    path("spaces/<int:space_id>/questions/<int:questions_id>/edit", views.space_questions_create),
-    path("spaces/<int:space_id>/exercises/<int:exercises_id>/edit", views.space_exercises_create),
-    path("spaces/<int:space_id>/groups/<int:groups_id>/edit", views.space_groups_create),
-    path("spaces/<int:space_id>/notices/<int:notices_id>/edit", views.space_notices_create),
+    path("spaces/<int:space_id>/resources/<int:resources_id>/edit", views.space_resources_edit),
+    path("spaces/<int:space_id>/questions/<int:questions_id>/edit", views.space_questions_edit),
+    path("spaces/<int:space_id>/exercises/<int:exercises_id>/edit", views.space_exercises_edit),
+    path("spaces/<int:space_id>/groups/<int:groups_id>/edit", views.space_groups_edit),
+    path("spaces/<int:space_id>/notices/<int:notices_id>/edit", views.space_notices_edit),
 
     path("spaces/<int:space_id>/resources/new", views.space_resources_create),
     path("spaces/<int:space_id>/questions/new", views.space_questions_create),

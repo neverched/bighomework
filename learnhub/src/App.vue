@@ -1,32 +1,31 @@
 <template>
-  <div id="app">
-    <nav>
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </nav>
-    <router-view/>
+	<el-container>
+		<el-header>
+      		<MyHeader/>
+		</el-header>
+		<el-container>
+			<el-aside width="200px">
+				<MyAside/>
+        
+			</el-aside>
+			<el-main>
+				<SpaceHeader/>
+				<IndexContent/>
+			</el-main>
+		</el-container>
+    </el-container>
+	<div>
   </div>
 </template>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
+<script>
+	import MyHeader from './components/MyHeader.vue'
+	import SpaceHeader from './components/SpaceHeader.vue'
+	import MyAside from './components/MyAside.vue'
+	import IndexContent from './components/IndexContent.vue'
+	export default {
+		name: 'App',
+		components:{MyHeader, SpaceHeader, MyAside,IndexContent}
 
-nav {
-  padding: 30px;
-}
-
-nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-nav a.router-link-exact-active {
-  color: #42b983;
-}
-</style>
+	}
+</script>

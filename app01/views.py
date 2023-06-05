@@ -323,7 +323,7 @@ def spaces_index(request):
     ses = request.session
     if request.method == 'POST':
         recv = request.POST
-        method = request.GET.get('sort')
+        method = request.POST.get('sort')
         if method is None:
             return JsonResponse({
                 'errno': '401',
@@ -345,7 +345,7 @@ def spaces_index(request):
                 'errno': '401',
                 'msg': 'POST参数order不合法'})
         # 查询条件
-        page = request.GET.get('page')
+        page = request.POST.get('page')
         if page is None:
             return JsonResponse({
                 'errno': '401',
@@ -659,7 +659,7 @@ def space_resources_index(request, space_id):
                 'errno': '403',
                 'msg': '非私有学习空间成员'})
         ret_dict = init_ret_dict(ses, space)
-        page = request.GET.get('page')
+        page = request.POST.get('page')
         if page is None:
             return JsonResponse({
                 'errno': '401',
@@ -667,7 +667,7 @@ def space_resources_index(request, space_id):
         page = int(page)
 
         query_list = []
-        method = request.GET.get('sort')
+        method = request.POST.get('sort')
         if method is None:
             return JsonResponse({
                 'errno': '401',
@@ -738,7 +738,7 @@ def space_groups_index(request, space_id):
                 'errno': '403',
                 'msg': '非私有学习空间成员'})
         ret_dict = init_ret_dict(ses, space)
-        page = request.GET.get('page')
+        page = request.POST.get('page')
         if page is None:
             return JsonResponse({
                 'errno': '401',
@@ -791,14 +791,14 @@ def space_questions_index(request, space_id):
                 'errno': '403',
                 'msg': '非私有学习空间成员'})
         ret_dict = init_ret_dict(ses, space)
-        page = request.GET.get('page')
+        page = request.POST.get('page')
         if page is None:
             return JsonResponse({
                 'errno': '401',
                 'msg': 'POST参数缺少page'})
         page = int(page)
 
-        method = request.GET.get('sort')
+        method = request.POST.get('sort')
         if method is None:
             return JsonResponse({
                 'errno': '401',
@@ -858,7 +858,7 @@ def space_exercises_index(request, space_id):
                 'errno': '403',
                 'msg': '非私有学习空间成员'})
         ret_dict = init_ret_dict(ses, space)
-        page = request.GET.get('page')
+        page = request.POST.get('page')
         if page is None:
             return JsonResponse({
                 'errno': '401',
@@ -901,7 +901,7 @@ def space_notices_index(request, space_id):
                 'errno': '403',
                 'msg': '非私有学习空间成员'})
         ret_dict = init_ret_dict(ses, space)
-        page = request.GET.get('page')
+        page = request.POST.get('page')
         if page is None:
             return JsonResponse({
                 'errno': '401',
@@ -2568,7 +2568,7 @@ def follow_people(request, uid):
 @csrf_exempt
 def search(request):
     if request.method == 'GET':
-        recv = request.GET
+        recv = request.POST
         types = recv.get('types')  # 搜索类型
         text = recv.get('text')  # 搜索内容
         method = recv.get('method')  # 搜索排序方式

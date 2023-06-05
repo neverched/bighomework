@@ -1996,7 +1996,7 @@ def get_activities(request):
             follow = User.objects.get(id=uid)
         except:
             return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
-        activities = Activities.objects.filter(hosts=uid)
+        activities = Activities.objects.filter(hosts=User.objects.get(id=uid))
 
         activities_need = []
         for activity in activities:
@@ -2392,6 +2392,7 @@ def follow_people(request, uid):
             new_follow.followed_id = user_id
             new_follow.following = follow
             new_follow.save()
+            activities_add(user_id, 0, 'users', uid, 0, '关注了用户')
 
             return JsonResponse({'error': 1, 'msg': '关注成功'})
 
@@ -2629,3 +2630,22 @@ def search(request):
         else:
             return JsonResponse({'error': 1016, 'msg': "搜索方式错误"})
     return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+
+# 接受参数分别为：用户id，时间，对象类型，对象id，学习空间id（没有置零），操作内容
+# 对象类型有：spaces，resources，comments，questions，users
+def activities_add(user_id, create_time, objects_type, t_id, s_id, contents):
+    user = User.objects.get(id=user_id)
+    new_activities = Activities()
+    if objects_type == 'users':
+        create_time = get_time_now()
+        s_id = 0
+    new_activities.hosts = user
+    new_activities.create_time = create_time
+    new_activities.type = objects_type
+    new_activities.s_id = s_id
+    new_activities.t_id = t_id
+    new_activities.programs = contents
+
+    new_activities.save()
+    return 0

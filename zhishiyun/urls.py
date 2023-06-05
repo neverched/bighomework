@@ -55,7 +55,7 @@ urlpatterns = [
     path('changepassword', views.change_password),
     path('user/<uid>/', views.get_info),
     path('user/<uid>/edit', views.edit_info),
-    path('user/<uid>/activities', views.get_activities),
+    path('user/activities', views.get_activities),
     path('user/<uid>/adminspaces', views.get_admin_spaces),
     path('user/<uid>/followspaces', views.get_follow_spaces),
     path('user/<uid>/resources', views.get_resources),

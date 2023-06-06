@@ -171,6 +171,7 @@ def like_follow_space(space, ses, is_like, is_follow, ret_dict, query_list, tota
             data.SpaceLikes.objects.filter(space_id=space, user_id=get_user_by_id(ses['user_id'])).delete()
             ret_dict['liked'] = False
         else:
+            activities_add(ses['user_id'], 0, '学习空间', space.id, 0, '点赞了学习空间')
             data.SpaceLikes.objects.create(space_id=space,
                                            user_id=get_user_by_id(ses['user_id']), like_time=get_time_now())
             ret_dict['liked'] = True
@@ -191,6 +192,7 @@ def like_follow_space(space, ses, is_like, is_follow, ret_dict, query_list, tota
             data.SpaceFollows.objects.filter(space_id=space, user_id=get_user_by_id(ses['user_id'])).delete()
             ret_dict['followed'] = False
         else:
+            activities_add(ses['user_id'], 0, '学习空间', space.id, 0, '关注了学习空间')
             data.SpaceFollows.objects.create(space_id=space,
                                              user_id=get_user_by_id(ses['user_id']), follow_time=get_time_now())
             ret_dict['followed'] = True
@@ -222,6 +224,7 @@ def like_follow_element(space, ses, is_like, is_follow, is_like_element, is_foll
             data.SpaceLikes.objects.filter(space_id=space, user_id=get_user_by_id(ses['user_id'])).delete()
             ret_dict['liked'] = False
         else:
+            activities_add(ses['user_id'], 0, ele_type, space.id, 0, '点赞了'+ele_type)
             data.SpaceLikes.objects.create(space_id=space,
                                            user_id=get_user_by_id(ses['user_id']), like_time=get_time_now())
             ret_dict['liked'] = True
@@ -242,6 +245,7 @@ def like_follow_element(space, ses, is_like, is_follow, is_like_element, is_foll
             data.SpaceFollows.objects.filter(space_id=space, user_id=get_user_by_id(ses['user_id'])).delete()
             ret_dict['followed'] = False
         else:
+            activities_add(ses['user_id'], 0, ele_type, space.id, 0, '关注了' + ele_type)
             data.SpaceFollows.objects.create(space_id=space,
                                              user_id=get_user_by_id(ses['user_id']), follow_time=get_time_now())
             ret_dict['followed'] = True
@@ -263,6 +267,7 @@ def like_follow_element(space, ses, is_like, is_follow, is_like_element, is_foll
                                       liked_type=ele_type, liked_id=ele_dict['id']).delete()
             ele_dict['ele_liked'] = False
         else:
+            activities_add(ses['user_id'], 0, ele_type, ele_dict['id'], space.id, '点赞了' + ele_type)
             data.Likes.objects.create(hosts=get_user_by_id(ses['user_id']),
                                       liked_type=ele_type, liked_id=ele_dict['id'], liked_time=get_time_now())
             ele_dict['ele_liked'] = True
@@ -284,6 +289,7 @@ def like_follow_element(space, ses, is_like, is_follow, is_like_element, is_foll
                                         followed_type=ele_type, followed_id=ele_dict['id']).delete()
             ele_dict['ele_followed'] = False
         else:
+            activities_add(ses['user_id'], 0, ele_type, ele_dict['id'], space.id, '关注了' + ele_type)
             data.Follows.objects.create(following=get_user_by_id(ses['user_id']), followed_type=ele_type,
                                         followed_id=ele_dict['id'], followed_time=get_time_now())
             ele_dict['ele_followed'] = True
@@ -513,6 +519,7 @@ def space_create(request):
             return JsonResponse({
                 'errno': '403',
                 'msg': '数据库操作失败'})
+        activities_add(ses['user_id'], 0, "学习空间", new_space.id, 0, '创建了学习空间')
         return JsonResponse({
             'errno': '200',
             'msg': '创建学习空间成功'})
@@ -1499,6 +1506,7 @@ def space_resources_create(request, space_id):
             last_update_time=time_now
         )
         new_resource.save()
+        activities_add(ses['user_id'], 0, "资源", space.id, new_resource.id, '创建了资源')
         return JsonResponse({
             'errno': '200',
             'msg': '创建元素成功',
@@ -1626,6 +1634,7 @@ def space_questions_create(request, space_id):
             last_update_time=time_now
         )
         new_question.save()
+        activities_add(ses['user_id'], 0, "讨论", space.id, new_question.id, '创建了讨论')
         return JsonResponse({
             'errno': '200',
             'msg': '创建元素成功',
@@ -1775,6 +1784,7 @@ def space_exercises_create(request, space_id):
             last_update_time=time_now
         )
         new_question.save()
+        activities_add(ses['user_id'], 0, "练习", space.id, new_question.id, '创建了练习')
         return JsonResponse({
             'errno': '200',
             'msg': '创建元素成功',
@@ -2183,7 +2193,7 @@ def get_admin_spaces(request, uid):
             follow = User.objects.get(id=uid)
         except:
             return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
-        studyspaces = StudySpaces.objects.filter(creator_id=uid)
+        studyspaces = StudySpaces.objects.filter(creator_id=get_user_by_id(uid))
 
         studyspaces_need = []
         for studyspace in studyspaces:
@@ -2205,13 +2215,14 @@ def get_follow_spaces(request, uid):
     if request.method == 'GET':
         uid = int(uid)
         try:
-            follow = User.objects.get(id=uid)
+            u = User.objects.get(id=uid)
         except:
             return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
-        follows = Follows.objects.filter(following=uid, followed_type='spaces')
+        follows = SpaceFollows.objects.filter(user_id=u)
         studyspaces = []
+
         for follow in follows:
-            studyspaces.append(StudySpaces.objects.get(id=follow.followed_id))
+            studyspaces.append(follow.space_id)
         studyspaces_need = []
         for studyspace in studyspaces:
             user_act = {
@@ -2350,14 +2361,14 @@ def get_collects_resources(request, uid):
             return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
         if uid != user_id:
             return JsonResponse({'error': 1013, 'msg': "这不是你的主页，不能观看哦"})
-        collects = Collects.objects.filter(collect_type='resources', hosts_id=uid)
+        collects = Follows.objects.filter(followed_type='资源', following=get_user_by_id(uid))
 
         resources_need = []
 
         for collect in collects:
-            r_id = collect.collect_id
+            r_id = collect.followed_id
             resource = SpaceResources.objects.get(id=r_id)
-            studyspace = StudySpaces.objects.get(id=resource.space_id)
+            studyspace = StudySpaces.objects.get(id=resource.space_id.id)
             user_act = {
                 "id": resource.id,
                 "space_name": studyspace.space_name,
@@ -2385,14 +2396,14 @@ def get_collects_questions(request, uid):
             return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
         if uid != user_id:
             return JsonResponse({'error': 1013, 'msg': "这不是你的主页，不能观看哦"})
-        collects = Collects.objects.filter(collect_type='questions', hosts_id=uid)
+        collects = Follows.objects.filter(followed_type='讨论', following=get_user_by_id(uid))
 
         questions_need = []
 
         for collect in collects:
-            q_id = collect.collect_id
-            question = SpaceResources.objects.get(id=q_id)
-            studyspace = StudySpaces.objects.get(id=question.space_id)
+            q_id = collect.followed_id
+            question = SpaceQuestions.objects.get(id=q_id)
+            studyspace = StudySpaces.objects.get(id=question.space_id.id)
             user_act = {
                 "id": question.id,
                 "space_name": studyspace.space_name,
@@ -2420,14 +2431,14 @@ def get_collects_answers(request, uid):
             return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
         if uid != user_id:
             return JsonResponse({'error': 1013, 'msg': "这不是你的主页，不能观看哦"})
-        collects = Collects.objects.filter(collect_type='answers', hosts_id=uid)
+        collects = Follows.objects.filter(followed_type='评论', following=get_user_by_id(uid))
 
         answers_need = []
 
         for collect in collects:
-            a_id = collect.collect_id
-            answer = SpaceResources.objects.filter(id=a_id)
-            studyspace = StudySpaces.objects.filter(id=answer.space_id)
+            a_id = collect.followed_id
+            answer = SpaceComments.objects.get(id=a_id)
+            studyspace = StudySpaces.objects.filter(id=answer.space_id.id)
             user_act = {
                 "id": answer.id,
                 "space_name": studyspace.space_name,
@@ -2455,14 +2466,14 @@ def get_collects_exercises(request, uid):
             return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
         if uid != user_id:
             return JsonResponse({'error': 1013, 'msg': "这不是你的主页，不能观看哦"})
-        collects = Collects.objects.filter(collect_type='exercises', hosts_id=uid)
+        collects = Follows.objects.filter(followed_type='练习', following=get_user_by_id(uid))
 
         exercises_need = []
 
         for collect in collects:
-            e_id = collect.collect_id
-            exercise = SpaceResources.objects.get(id=e_id)
-            studyspace = StudySpaces.objects.get(id=exercise.space_id)
+            e_id = collect.followed_id
+            exercise = SpaceExercises.objects.get(id=e_id)
+            studyspace = StudySpaces.objects.get(id=exercise.space_id.id)
             user_act = {
                 "id": exercise.id,
                 "space_name": studyspace.space_name,
@@ -2555,6 +2566,7 @@ def follow_people(request, uid):
             new_follow.followed_id = user_id
             new_follow.following = follow
             new_follow.save()
+            activities_add(user_id, 0, '用户', uid, 0, '关注了用户')
 
             return JsonResponse({'error': 1, 'msg': '关注成功'})
 
@@ -2769,3 +2781,20 @@ def search(request):
         else:
             return JsonResponse({'error': 1016, 'msg': "搜索方式错误"})
     return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+
+def activities_add(user_id, create_time, objects_type, t_id, s_id, contents):
+    user = User.objects.get(id=user_id)
+    new_activities = Activities()
+    if objects_type == '用户':
+        create_time = get_time_now()
+        s_id = 0
+    new_activities.hosts = user
+    new_activities.create_time = create_time
+    new_activities.type = objects_type
+    new_activities.s_id = s_id
+    new_activities.t_id = t_id
+    new_activities.programs = contents
+
+    new_activities.save()
+    return 0

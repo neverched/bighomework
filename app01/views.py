@@ -1003,15 +1003,15 @@ def space_resources(request, space_id, resources_id):
         ele_dict = model_to_dict(resource, exclude=['file'])
         ele_dict['likes'] = data.Likes.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
         ele_dict['follows'] = data.Follows.objects.filter(followed_type=ele_type, followed_id=ele_dict['id']).count()
-
         ele_dict['ele_liked'] = False
         ele_dict['ele_followed'] = False
-        if data.Likes.objects.filter(hosts=get_user_by_id(ses['user_id']),
-                                     liked_type=ele_type, liked_id=ele_dict['id']).count() == 1:
-            ele_dict['ele_liked'] = True
-        if data.Follows.objects.filter(following=get_user_by_id(ses['user_id']),
-                                       followed_type=ele_type, followed_id=ele_dict['id']).count() == 1:
-            ele_dict['ele_followed'] = True
+        if ses.get('user_id'):
+            if data.Likes.objects.filter(hosts=get_user_by_id(ses['user_id']),
+                                         liked_type=ele_type, liked_id=ele_dict['id']).count() == 1:
+                ele_dict['ele_liked'] = True
+            if data.Follows.objects.filter(following=get_user_by_id(ses['user_id']),
+                                           followed_type=ele_type, followed_id=ele_dict['id']).count() == 1:
+                ele_dict['ele_followed'] = True
 
         comments_list = get_comments_list(space, ele_dict['id'], ele_type)
         for each in comments_list:
@@ -1020,7 +1020,7 @@ def space_resources(request, space_id, resources_id):
                 return JsonResponse({
                     'errno': '402',
                     'msg': '评论者id不存在'})
-            each['commenter'] = model_to_dict(commenter)
+            each['commenter'] = model_to_dict(commenter[0])
 
         is_like = request.POST.get('is_like')
         is_follow = request.POST.get('is_follow')
@@ -1112,12 +1112,13 @@ def space_questions(request, space_id, questions_id):
 
         ele_dict['ele_liked'] = False
         ele_dict['ele_followed'] = False
-        if data.Likes.objects.filter(hosts=get_user_by_id(ses['user_id']),
-                                     liked_type=ele_type, liked_id=ele_dict['id']).count() == 1:
-            ele_dict['ele_liked'] = True
-        if data.Follows.objects.filter(following=get_user_by_id(ses['user_id']),
-                                       followed_type=ele_type, followed_id=ele_dict['id']).count() == 1:
-            ele_dict['ele_followed'] = True
+        if ses.get('user_id'):
+            if data.Likes.objects.filter(hosts=get_user_by_id(ses['user_id']),
+                                         liked_type=ele_type, liked_id=ele_dict['id']).count() == 1:
+                ele_dict['ele_liked'] = True
+            if data.Follows.objects.filter(following=get_user_by_id(ses['user_id']),
+                                           followed_type=ele_type, followed_id=ele_dict['id']).count() == 1:
+                ele_dict['ele_followed'] = True
 
         comments_list = get_comments_list(space, ele_dict['id'], ele_type)
         for each in comments_list:
@@ -1203,12 +1204,13 @@ def space_exercises(request, space_id, exercises_id):
 
         ele_dict['ele_liked'] = False
         ele_dict['ele_followed'] = False
-        if data.Likes.objects.filter(hosts=get_user_by_id(ses['user_id']),
-                                     liked_type=ele_type, liked_id=ele_dict['id']).count() == 1:
-            ele_dict['ele_liked'] = True
-        if data.Follows.objects.filter(following=get_user_by_id(ses['user_id']),
-                                       followed_type=ele_type, followed_id=ele_dict['id']).count() == 1:
-            ele_dict['ele_followed'] = True
+        if ses.get('user_id'):
+            if data.Likes.objects.filter(hosts=get_user_by_id(ses['user_id']),
+                                         liked_type=ele_type, liked_id=ele_dict['id']).count() == 1:
+                ele_dict['ele_liked'] = True
+            if data.Follows.objects.filter(following=get_user_by_id(ses['user_id']),
+                                           followed_type=ele_type, followed_id=ele_dict['id']).count() == 1:
+                ele_dict['ele_followed'] = True
 
         comments_list = get_comments_list(space, ele_dict['id'], ele_type)
         for each in comments_list:
@@ -1277,12 +1279,13 @@ def space_groups(request, space_id, groups_id):
 
         ele_dict['ele_liked'] = False
         ele_dict['ele_followed'] = False
-        if data.Likes.objects.filter(hosts=get_user_by_id(ses['user_id']),
-                                     liked_type=ele_type, liked_id=ele_dict['id']).count() == 1:
-            ele_dict['ele_liked'] = True
-        if data.Follows.objects.filter(following=get_user_by_id(ses['user_id']),
-                                       followed_type=ele_type, followed_id=ele_dict['id']).count() == 1:
-            ele_dict['ele_followed'] = True
+        if ses.get('user_id'):
+            if data.Likes.objects.filter(hosts=get_user_by_id(ses['user_id']),
+                                         liked_type=ele_type, liked_id=ele_dict['id']).count() == 1:
+                ele_dict['ele_liked'] = True
+            if data.Follows.objects.filter(following=get_user_by_id(ses['user_id']),
+                                           followed_type=ele_type, followed_id=ele_dict['id']).count() == 1:
+                ele_dict['ele_followed'] = True
 
         comments_list = get_comments_list(space, ele_dict['id'], ele_type)
         for each in comments_list:

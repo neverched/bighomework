@@ -2054,14 +2054,19 @@ def user_confirm(request):
 @csrf_exempt
 def login(request):
     if request.method == 'POST':
-        username = request.POST.get('username')  # 获取请求数据
+        email = request.POST.get('email')  # 获取请求数据
         password = request.POST.get('password')
-        if request.session.get('username') == username:
-            return JsonResponse({'error': 1009, 'msg': "已经登录"})
+
+
         try:
-            user = User.objects.get(username=username)
+            # print(email)
+            user = User.objects.get(email=email)
         except:
             return JsonResponse({'error': 1011, 'msg': "没有此用户"})
+
+        if request.session.get('uid') == user.id:
+            return JsonResponse({'error': 1009, 'msg': "已经登录"})
+
         if user.password == password:  # 判断请求的密码是否与数据库存储的密码相同
             if not user.confirmed:
                 return JsonResponse({'error': 1010, 'msg': "未确认"})
@@ -2078,7 +2083,8 @@ def login(request):
 
 @csrf_exempt
 def logout(request):
-    request.session.flush()
+    del request.session['uid']
+    del request.session['user_id']
     return JsonResponse({'error': 1, 'msg': "注销成功"})
 
 

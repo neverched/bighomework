@@ -8,6 +8,12 @@ import 'element-plus/dist/index.css'
 //引入VueRouter组件
 import router from '@/router/index.js'
 
+//引入vuex
+import store from '@/store/index.js'
+
+//引入axios
+import axios from '@/plugins/axiosInstance.js'
+
 //引入ElementPlus图标
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
@@ -19,5 +25,8 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 app.use(ElementPlus)
 app.use(router)
+app.use(store)
 
 app.mount('#app')
+
+app.config.globalProperties.$axios = axios

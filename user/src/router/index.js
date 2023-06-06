@@ -13,6 +13,7 @@ export default createRouter({
 		{
 			name:'users',
 			path:'/users/:id(\\d+)',
+			component: () => import('@/views/user/UserView.vue'),
 			props:true,
 			children: [
 				{

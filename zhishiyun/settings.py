@@ -77,14 +77,13 @@ WSGI_APPLICATION = 'zhishiyun.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'HOST': '127.0.0.1',  # 数据库主机
+        'HOST': 'localhost',  # 数据库主机
         'PORT': 3306,  # 数据库端口
         'USER': 'root',  # 数据库用户名
-        'PASSWORD': '123456',  # 数据库用户密码
-        'NAME': 'zhishiyun_sql'  # 数据库名字
+        'PASSWORD': 'Zjl2003ms',  # 数据库用户密码
+        'NAME': 'zhishihui'  # 数据库名字
     }
 }
-
 
 
 # Password validation

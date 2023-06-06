@@ -14,7 +14,7 @@
           <el-input class="input" v-model="form.password" placeholder="密码" type="password" show-password></el-input>
         </el-form-item>
         <el-form-item class="input-item">
-          <el-button class="input" type="primary" style="width: 100%">登录</el-button>
+          <el-button class="input" @click="passLogin()" type="primary" style="width: 100%">登录</el-button>
         </el-form-item>
       </el-form>
       <el-form v-show="activeIndex == 2" class="form-all" label-position="left" :model="form" label-width="0px">
@@ -40,7 +40,7 @@
       <el-menu :default-active="'1'" class="el-menu-demo" mode="horizontal">
         <el-menu-item index="1" class="navi-item">账号注册</el-menu-item>
       </el-menu>
-      <el-form v-show="activeIndex == 1" class="form-all" label-position="left" :model="form" label-width="0px">
+      <el-form class="form-all" label-position="left" :model="form" label-width="0px">
         <el-form-item class="input-item">
           <el-input class="input" v-model="form.name" placeholder="昵称" type="text"></el-input>
         </el-form-item>
@@ -53,12 +53,12 @@
         <el-form-item class="input-item">
           <el-input class="input" v-model="form.code" placeholder="验证码">
             <template #append>
-              <span class="verify-code-btn">{{ verifyCodeBtn }}</span>
+              <span @click="checkEmail(form.code)" class="verify-code-btn">{{ verifyCodeBtn }}</span>
             </template>
           </el-input>
         </el-form-item>
         <el-form-item class="input-item">
-          <el-button class="input" type="primary" style="width: 100%">注册</el-button>
+          <el-button class="input" @click="checkRegister(form)" type="primary" style="width: 100%">注册</el-button>
         </el-form-item>
       </el-form>
       <span class="login-signin" @click="handleChangeLogin">
@@ -69,6 +69,7 @@
 </template>
 <script>
 import { reactive, ref, computed } from 'vue'
+import api from '@/plugins/axiosInstance'
 
 export default {
   name: 'SignInView',
@@ -92,13 +93,117 @@ export default {
       console.log(index)
       activeIndex.value = index
     }
+
     const handleChangeLogin = () => {
       if (activeForm.value == 'login') {
         activeForm.value = 'register'
+        console.log('跳转到注册页面, activeForm.value:', activeForm.value)
       } else {
         activeForm.value = 'login'
+        console.log('跳转到登录页面, activeForm.value:', activeForm.value)
       }
-      console.log('跳转到注册页面')
+    }
+
+    const passLogin = () => {
+      api({
+        url: 'login',
+        method: 'post',
+        data: {
+          email: form.email,
+          password: form.password
+        }
+      }).then(res => {
+        console.log('登录成功', res)
+        clearForm(form)
+      }).catch(err => {
+        console.log('登录失败', err)
+        clearForm(form)
+      })
+    }
+
+    const isEmailLegal = (email) => {
+      const reg = /^([a-zA-Z]|[0-9])(\w|-)+@[a-zA-Z0-9]+\.([a-zA-Z]{2,4})$/
+      return reg.test(email)
+    }
+
+    const checkEmail = (email) => {
+      if (!email) {
+        alert('邮箱不能为空')
+      } else if (!isEmailLegal(email)) {
+        alert('邮箱格式不正确')
+      } else {
+        handleGetCode()
+      }
+    }
+
+    const handleGetCode = () => {
+      getCode()
+      let count = 60
+      const timer = setInterval(() => {
+        if (count > 0) {
+          count--
+          verifyCodeBtn.value = count + 's后重新获取'
+        } else {
+          clearInterval(timer)
+          verifyCodeBtn.value = '获取验证码'
+        }
+      }, 1000)
+    }
+
+    const getCode = () => {
+      api({
+        url: '',
+        method: 'post',
+        data: {
+          name: form.name,
+          email: form.email,
+          password: form.password,
+          code: form.code
+        }
+      })
+    }
+
+    const checkRegister = (form) => {
+      if (!form.name) {
+        alert('昵称不能为空')
+      } else if (!form.email) {
+        alert('邮箱不能为空')
+      } else if (!isEmailLegal(form.email)) {
+        alert('邮箱格式不正确')
+      } else if (!form.password) {
+        alert('密码不能为空')
+      } else if (!form.code) {
+        alert('验证码不能为空')
+      } else {
+        handleRegister(form)
+      }
+    }
+
+    const clearForm = (form) => {
+      form.name = ''
+      form.email = ''
+      form.password = ''
+      form.code = ''
+    }
+
+    const handleRegister = (form) => {
+      api({
+        url: 'register',
+        method: 'post',
+        data: {
+          name: form.name,
+          email: form.email,
+          password: form.password,
+          code: form.code
+        }
+      }).then(res => {
+        console.log('注册成功', res)
+        clearForm(form)
+        activeForm.value = 'login'
+      }).catch(err => {
+        console.log('注册失败', err)
+        clearForm(form)
+      })
     }
 
     return {
@@ -109,7 +214,10 @@ export default {
       verifyCodeBtn,
       loginSignInMsg,
       handleSelect,
-      handleChangeLogin
+      handleChangeLogin,
+      checkEmail,
+      checkRegister,
+      passLogin
     }
   }
 }

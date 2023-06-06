@@ -92,7 +92,7 @@ def get_comments_list(space, ele_id, ele_type):
 def make_comment(space, content, ele_id, ele_type, user_id):
     if ele_type == '资源':
         data.SpaceComments.objects.create(space_id=space,
-                                          user_id=user_id,
+                                          user_id=get_user_by_id(user_id),
                                           element_id=ele_id,
                                           comment_type=1,
                                           content=content,
@@ -100,7 +100,7 @@ def make_comment(space, content, ele_id, ele_type, user_id):
                                           )
     elif ele_type == '讨论':
         data.SpaceComments.objects.create(space_id=space,
-                                          user_id=user_id,
+                                          user_id=get_user_by_id(user_id),
                                           element_id=ele_id,
                                           comment_type=2,
                                           content=content,
@@ -108,7 +108,7 @@ def make_comment(space, content, ele_id, ele_type, user_id):
                                           )
     elif ele_type == '习题':
         data.SpaceComments.objects.create(space_id=space,
-                                          user_id=user_id,
+                                          user_id=get_user_by_id(user_id),
                                           element_id=ele_id,
                                           comment_type=3,
                                           content=content,
@@ -116,7 +116,7 @@ def make_comment(space, content, ele_id, ele_type, user_id):
                                           )
     elif ele_type == '群组':
         data.SpaceComments.objects.create(space_id=space,
-                                          user_id=user_id,
+                                          user_id=get_user_by_id(user_id),
                                           element_id=ele_id,
                                           comment_type=4,
                                           content=content,

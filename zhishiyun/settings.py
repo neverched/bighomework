@@ -9,12 +9,11 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -26,7 +25,6 @@ SECRET_KEY = 'django-insecure-x3qj1!i%+6rz=%%6+g)rmmok#9=ifez-375b$3y5shszb0sw#3
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -70,7 +68,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'zhishiyun.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
@@ -84,6 +81,7 @@ DATABASES = {
         'NAME': 'zhishihui'  # 数据库名字
     }
 }
+
 
 
 # Password validation
@@ -104,7 +102,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
@@ -116,13 +113,31 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
-
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# 发送邮件配置
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# smtp服务地址
+EMAIL_HOST = 'smtp.126.com'
+# 端口默认都是25不需要修改
+EMAIL_PORT = 25
+# 发送邮件的邮箱，需要配置开通SMTP
+EMAIL_HOST_USER = 'neverched@126.com'
+# 在邮箱中设置的客户端授权密码
+EMAIL_HOST_PASSWORD = 'SBPVRSMJKKIGZGDS'
+# 收件人看到的发件人
+EMAIL_FROM = 'dingzhen@126.com>'
+# 这⾥必须是True，否则发送不成功
+EMAIL_USE_TLS = True
+
+FRONTEND = 'http://127.0.0.1:8090'
+BACKEND = 'http://127.0.0.1:8000'

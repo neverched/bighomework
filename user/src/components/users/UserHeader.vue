@@ -13,11 +13,24 @@
         </el-col>
         <el-col class="profile-info-box" :span="12">
           <el-row>
-            <el-text size="large">{{ info.name }}</el-text>
+            <el-text style="color: black; font-size: large; font-weight: bold;">{{ info.name }}</el-text>
             <span class="my-space"></span>
-            <el-tag v-if="info.gender" type="info" class="mx-1" effect="light" round>{{ gender2Chinese }}</el-tag>
+            <el-tag v-if="info.gender" type="info" class="mx-1" effect="light" round>
+              <el-icon class="info-cion" v-if="info.gender == 'male'" color="#409EFC">
+                <Male />
+              </el-icon>
+              <el-icon class="info-cion" v-else color="#F56C6C">
+                <Male />
+              </el-icon>
+              {{ gender2Chinese }}
+            </el-tag>
             <span class="my-space"></span>
-            <el-tag v-if="info.address" type="info" class="mx-1" effect="light" round>{{ info.address }}</el-tag>
+            <el-tag v-if="info.address" type="info" class="mx-1" effect="light" round>
+              <el-icon class="info-cion" color="#f8e3c5">
+                <Location />
+              </el-icon>
+              {{ info.address }}
+            </el-tag>
           </el-row>
           <br />
           <el-row>
@@ -42,7 +55,7 @@
 import { reactive, computed } from 'vue'
 
 let coverImg = require('@/assets/default_user_cover.jpg'); // 封面图片
-let avatarImg = require('@/assets/logo.png'); // 头像图片
+let avatarImg = require('@/assets/minecraft-creeper-face.png'); // 头像图片
 
 const info = reactive({
   name: 'Zhang San',
@@ -119,6 +132,10 @@ const gender2Chinese = computed(() => {
   flex-direction: column;
   justify-content: end;
   align-items: flex-start;
+}
+
+.info-cion {
+  pointer-events: none;
 }
 
 .edit-btn-box {

@@ -14,7 +14,8 @@
           <el-input class="input" v-model="form.password" placeholder="密码" type="password" show-password></el-input>
         </el-form-item>
         <el-form-item class="input-item">
-          <el-button class="input" @click="passLogin()" type="primary" style="width: 100%">登录</el-button>
+          <el-button class="input" @click="handleClickPassLogin" type="primary" style="width: 100%">登录</el-button>
+          <!-- <el-button class="input" @click="handleClickLogout" type="primary" style="width: 100%">登出</el-button> -->
         </el-form-item>
       </el-form>
       <el-form v-show="activeIndex == 2" class="form-all" label-position="left" :model="form" label-width="0px">
@@ -22,11 +23,10 @@
           <el-input class="input" v-model="form.email" placeholder="邮箱" type="email"></el-input>
         </el-form-item>
         <el-form-item class="input-item">
-          <el-input class="input" v-model="form.code" placeholder="验证码">
-            <template #append>
-              <span class="verify-code-btn">{{ verifyCodeBtn }}</span>
-            </template>
-          </el-input>
+          <div class="verify-code-box">
+            <el-input class="input" v-model="form.code" placeholder="验证码"></el-input>
+            <span :style="verifyCodeStyle" @click="checkEmail" class="verify-code-btn">{{ verifyCodeBtn }}</span>
+          </div>
         </el-form-item>
         <el-form-item class="input-item">
           <el-button class="input" type="primary" style="width: 100%">登录</el-button>
@@ -48,17 +48,22 @@
           <el-input class="input" v-model="form.email" placeholder="邮箱" type="email"></el-input>
         </el-form-item>
         <el-form-item class="input-item">
-          <el-input class="input" v-model="form.password" placeholder="密码" type="password" show-password></el-input>
+          <el-input class="input" v-model="form.password" placeholder="密码(8~18位, 有且仅有字母与数字)" type="password"
+            show-password></el-input>
         </el-form-item>
         <el-form-item class="input-item">
-          <el-input class="input" v-model="form.code" placeholder="验证码">
-            <template #append>
-              <span @click="checkEmail(form.code)" class="verify-code-btn">{{ verifyCodeBtn }}</span>
-            </template>
-          </el-input>
+          <el-input class="input" v-model="form.confirmPassword" placeholder="确认密码" type="password"
+            show-password></el-input>
         </el-form-item>
         <el-form-item class="input-item">
-          <el-button class="input" @click="checkRegister(form)" type="primary" style="width: 100%">注册</el-button>
+          <div class="verify-code-box">
+            <el-input class="input" v-model="form.code" placeholder="验证码"></el-input>
+            <span :style="verifyCodeStyle" @click="handleClickVerifyCode" class="verify-code-btn">{{ verifyCodeBtn
+            }}</span>
+          </div>
+        </el-form-item>
+        <el-form-item class="input-item">
+          <el-button class="input" @click="handleClickRegister" type="primary" style="width: 100%">注册</el-button>
         </el-form-item>
       </el-form>
       <span class="login-signin" @click="handleChangeLogin">
@@ -70,6 +75,7 @@
 <script>
 import { reactive, ref, computed } from 'vue'
 import api from '@/plugins/axiosInstance'
+import { ElMessage } from 'element-plus'
 
 export default {
   name: 'SignInView',
@@ -79,11 +85,13 @@ export default {
       name: '',
       email: '',
       password: '',
+      confirmPassword: '',
       code: ''
     })
     let activeIndex = ref('1')
     let activeForm = ref('login')
     let verifyCodeBtn = ref('获取验证码')
+    let verifyCodeStyle = ref('pointer-events:auto;')
 
     const loginSignInMsg = computed(() => {
       return activeForm.value == 'login' ? '还没有账号?立即注册>>' : '已有账号?立即登录>>'
@@ -104,15 +112,25 @@ export default {
       }
     }
 
+    const handleClickPassLogin = () => {
+      if (!form.email) {
+        alert('邮箱不能为空')
+      } else if (!isEmailLegal(form.email)) {
+        alert('邮箱格式不正确')
+      } else if (!form.password) {
+        alert('密码不能为空')
+      } else if (!isPasswordLegal(form.password)) {
+        alert('密码格式不正确')
+      } else {
+        passLogin()
+      }
+    }
+
     const passLogin = () => {
-      api({
-        url: 'login',
-        method: 'post',
-        data: {
-          email: form.email,
-          password: form.password
-        }
-      }).then(res => {
+      const formData = new FormData()
+      formData.append('email', form.email)
+      formData.append('password', form.password)
+      api.post('login', formData).then(res => {
         console.log('登录成功', res)
         clearForm(form)
       }).catch(err => {
@@ -126,44 +144,12 @@ export default {
       return reg.test(email)
     }
 
-    const checkEmail = (email) => {
-      if (!email) {
-        alert('邮箱不能为空')
-      } else if (!isEmailLegal(email)) {
-        alert('邮箱格式不正确')
-      } else {
-        handleGetCode()
-      }
+    const isPasswordLegal = (password) => {
+      const reg = /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,18}$/
+      return reg.test(password)
     }
 
-    const handleGetCode = () => {
-      getCode()
-      let count = 60
-      const timer = setInterval(() => {
-        if (count > 0) {
-          count--
-          verifyCodeBtn.value = count + 's后重新获取'
-        } else {
-          clearInterval(timer)
-          verifyCodeBtn.value = '获取验证码'
-        }
-      }, 1000)
-    }
-
-    const getCode = () => {
-      api({
-        url: '',
-        method: 'post',
-        data: {
-          name: form.name,
-          email: form.email,
-          password: form.password,
-          code: form.code
-        }
-      })
-    }
-
-    const checkRegister = (form) => {
+    const handleClickVerifyCode = () => {
       if (!form.name) {
         alert('昵称不能为空')
       } else if (!form.email) {
@@ -172,10 +158,73 @@ export default {
         alert('邮箱格式不正确')
       } else if (!form.password) {
         alert('密码不能为空')
+      } else if (!isPasswordLegal(form.password)) {
+        alert('密码格式不正确')
+      } else if (!form.confirmPassword) {
+        alert('请确认密码')
+      } else if (form.password !== form.confirmPassword) {
+        alert('两次密码不一致')
+      } else {
+        handleGetCode()
+      }
+    }
+
+    const handleGetCode = () => {
+      getCode()
+      let count = 60
+      verifyCodeStyle.value = 'pointer-events:none;'
+      const timer = setInterval(() => {
+        if (count > 0) {
+          count--
+          verifyCodeBtn.value = count + 's后重新获取'
+        } else {
+          clearInterval(timer)
+          verifyCodeBtn.value = '获取验证码'
+          verifyCodeStyle.value = 'pointer-events:auto;'
+        }
+      }, 1000)
+    }
+
+    const getCode = () => {
+      const formData = new FormData()
+      formData.append('username', form.name)
+      formData.append('email', form.email)
+      formData.append('password1', form.password)
+      formData.append('password2', form.confirmPassword)
+      api.post('register', formData).then(res => {
+        console.log('获取验证码成功', res)
+        ElMessage({
+          message: '验证码已发送至邮箱, 请注意查收',
+          type: 'success'
+        })
+      }).catch(err => {
+        console.log('获取验证码失败', err)
+        ElMessage({
+          message: '获取验证码失败, 请稍后重试',
+          type: 'error'
+        })
+      })
+    }
+
+    const handleClickRegister = () => {
+      if (!form.name) {
+        alert('昵称不能为空')
+      } else if (!form.email) {
+        alert('邮箱不能为空')
+      } else if (!isEmailLegal(form.email)) {
+        alert('邮箱格式不正确')
+      } else if (!form.password) {
+        alert('密码不能为空')
+      } else if (!isPasswordLegal(form.password)) {
+        alert('密码格式不正确')
+      } else if (!form.confirmPassword) {
+        alert('请确认密码')
+      } else if (form.password !== form.confirmPassword) {
+        alert('两次密码不一致')
       } else if (!form.code) {
         alert('验证码不能为空')
       } else {
-        handleRegister(form)
+        handleRegister()
       }
     }
 
@@ -183,26 +232,39 @@ export default {
       form.name = ''
       form.email = ''
       form.password = ''
+      form.confirmPassword = ''
       form.code = ''
     }
 
-    const handleRegister = (form) => {
-      api({
-        url: 'register',
-        method: 'post',
-        data: {
-          name: form.name,
-          email: form.email,
-          password: form.password,
-          code: form.code
-        }
-      }).then(res => {
+    const handleRegister = () => {
+      const formData = new FormData()
+      formData.append('code', form.code)
+      api.post('register/confirm', formData).then(res => {
         console.log('注册成功', res)
+        ElMessage({
+          message: '注册成功',
+          type: 'success'
+        })
         clearForm(form)
         activeForm.value = 'login'
       }).catch(err => {
         console.log('注册失败', err)
-        clearForm(form)
+        ElMessage({
+          message: '注册失败, 请稍后重试',
+          type: 'error'
+        })
+        // clearForm(form)
+      })
+    }
+
+    const handleClickLogout = () => {
+      api({
+        url: 'logout',
+        method: 'post'
+      }).then(res => {
+        console.log('登出成功', res)
+      }).catch(err => {
+        console.log('登出失败', err)
       })
     }
 
@@ -213,11 +275,13 @@ export default {
       activeForm,
       verifyCodeBtn,
       loginSignInMsg,
+      verifyCodeStyle,
       handleSelect,
       handleChangeLogin,
-      checkEmail,
-      checkRegister,
-      passLogin
+      handleClickVerifyCode,
+      handleClickRegister,
+      handleClickPassLogin,
+      handleClickLogout
     }
   }
 }
@@ -288,8 +352,20 @@ img {
   cursor: pointer;
 }
 
+.verify-code-box {
+  position: relative;
+  width: 100%;
+}
+
 .verify-code-btn {
   color: #409eff;
+  width: fit-content;
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  top: 0;
+  margin: 4px;
+  margin-right: 10px;
 }
 
 .verify-code-btn:hover {

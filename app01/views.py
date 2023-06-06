@@ -285,7 +285,7 @@ def like_follow_element(space, ses, is_like, is_follow, is_like_element, is_foll
             ele_dict['ele_followed'] = False
         else:
             data.Follows.objects.create(following=get_user_by_id(ses['user_id']), followed_type=ele_type,
-                                        followed_id=ele_dict['id'], followed_time=get_time_now())
+                                        followed_id=ele_dict['id'], create_time=get_time_now())
             ele_dict['ele_followed'] = True
         return JsonResponse({
             'errno': '200',
@@ -689,6 +689,8 @@ def space_resources_index(request, space_id):
         total = resources_set.count()
         for each in resources_set:
             each_dict = model_to_dict(each, exclude=['file'])
+            each_dict['title'] = each_dict['resource_name']
+            each_dict['user_name'] = get_user_by_id(each_dict['user_id']).username
             each_dict['likes'] = data.Likes.objects.filter(liked_type='资源', liked_id=each_dict['id']).count()
             each_dict['follows'] = data.Follows.objects.filter(followed_type='资源',
                                                                followed_id=each_dict['id']).count()
@@ -823,6 +825,7 @@ def space_questions_index(request, space_id):
         total = questions_set.count()
         for each in questions_set:
             each_dict = model_to_dict(each)
+            each_dict['user_name'] = get_user_by_id(each_dict['user_id']).username
             each_dict['likes'] = data.Likes.objects.filter(liked_type='讨论', liked_id=each_dict['id']).count()
             each_dict['comments'] = len(get_comments_list(space, each_dict['id'], '讨论'))
             each_dict['follows'] = data.Follows.objects.filter(liked_type='讨论', liked_id=each_dict['id']).count()
@@ -872,6 +875,7 @@ def space_exercises_index(request, space_id):
         total = exercises_set.count()
         for each in exercises_set:
             each_dict = model_to_dict(each)
+            each_dict['user_name'] = get_user_by_id(each_dict['user_id']).username
             each_dict['likes'] = data.Likes.objects.filter(followed_type='习题', followed_id=each_dict['id']).count()
             each_dict['comments'] = len(get_comments_list(space, each_dict['id'], '习题'))
             each_dict['follows'] = data.Follows.objects.filter(followed_type='习题', followed_id=each_dict['id']).count()
@@ -912,6 +916,10 @@ def space_notices_index(request, space_id):
 
         query_list = []
         notices_set = data.SpaceNotices.objects.filter(space_id=space).order_by('-last_update_time')
+        for each in notices_set:
+            each_dict = model_to_dict(each)
+            each_dict['user_name'] = get_user_by_id(each_dict['user_id']).username
+            query_list.append(each_dict)
         total = notices_set.count()
         return JsonResponse({
             'errno': '200',
@@ -1001,6 +1009,8 @@ def space_resources(request, space_id, resources_id):
             })
 
         ele_dict = model_to_dict(resource, exclude=['file'])
+        ele_dict['title'] = ele_dict['resource_name']
+        ele_dict['creator'] = model_to_dict(get_user_by_id(ele_dict['user_id']))
         ele_dict['likes'] = data.Likes.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
         ele_dict['follows'] = data.Follows.objects.filter(followed_type=ele_type, followed_id=ele_dict['id']).count()
         ele_dict['ele_liked'] = False
@@ -1107,6 +1117,7 @@ def space_questions(request, space_id, questions_id):
                 'msg': '评论成功'
             })
         ele_dict = model_to_dict(question)
+        ele_dict['creator'] = model_to_dict(get_user_by_id(ele_dict['user_id']))
         ele_dict['likes'] = data.Likes.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
         ele_dict['follows'] = data.Follows.objects.filter(followed_type=ele_type, followed_id=ele_dict['id']).count()
 
@@ -1199,6 +1210,7 @@ def space_exercises(request, space_id, exercises_id):
             })
 
         ele_dict = model_to_dict(exercise)
+        ele_dict['creator'] = model_to_dict(get_user_by_id(ele_dict['user_id']))
         ele_dict['likes'] = data.Likes.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
         ele_dict['follows'] = data.Follows.objects.filter(followed_type=ele_type, followed_id=ele_dict['id']).count()
 
@@ -1274,6 +1286,7 @@ def space_groups(request, space_id, groups_id):
 
         ele_type = '习题'
         ele_dict = model_to_dict(group)
+        ele_dict['creator'] = model_to_dict(get_user_by_id(ele_dict['user_id']))
         ele_dict['likes'] = data.Likes.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
         ele_dict['follows'] = data.Follows.objects.filter(followed_type=ele_type, followed_id=ele_dict['id']).count()
 
@@ -1349,7 +1362,7 @@ def space_notices(request, space_id, notices_id):
 
         ele_type = '公告'
         ele_dict = model_to_dict(notice)
-
+        ele_dict['creator'] = model_to_dict(get_user_by_id(ele_dict['user_id']))
         is_like = request.POST.get('is_like')
         is_follow = request.POST.get('is_follow')
         return like_follow_element(space, ses, is_like, is_follow, False, False,
@@ -1401,7 +1414,7 @@ def space_resources_edit(request, space_id, resources_id):
         resource = resource[0]
         ele_type = '资源'
         ele_dict = model_to_dict(resource, exclude=['file'])
-
+        ele_dict['creator'] = model_to_dict(get_user_by_id(ele_dict['user_id']))
         is_edit = request.POST.get('is_edit')
         if is_edit is None:
             return JsonResponse({
@@ -1539,7 +1552,7 @@ def space_questions_edit(request, space_id, questions_id):
         question = question[0]
         ele_type = '讨论'
         ele_dict = model_to_dict(question)
-
+        ele_dict['creator'] = model_to_dict(get_user_by_id(ele_dict['user_id']))
         is_edit = request.POST.get('is_edit')
         if is_edit is None:
             return JsonResponse({
@@ -1675,7 +1688,7 @@ def space_exercises_edit(request, space_id, exercises_id):
         exercise = exercise[0]
         ele_type = '习题'
         ele_dict = model_to_dict(exercise)
-
+        ele_dict['creator'] = model_to_dict(get_user_by_id(ele_dict['user_id']))
         is_edit = request.POST.get('is_edit')
         if is_edit is None:
             return JsonResponse({
@@ -1823,7 +1836,7 @@ def space_notices_edit(request, space_id, notices_id):
         notice = notice[0]
         ele_type = '讨论'
         ele_dict = model_to_dict(notice)
-
+        ele_dict['creator'] = model_to_dict(get_user_by_id(ele_dict['user_id']))
         is_edit = request.POST.get('is_edit')
         if is_edit is None:
             return JsonResponse({

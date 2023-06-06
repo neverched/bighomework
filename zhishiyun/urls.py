@@ -52,6 +52,8 @@ urlpatterns = [
     path('register', views.register),  # 指定register函数的路由为register
     path('register/confirm', views.user_confirm),
     path('login', views.login),
+    path('login/confirm', views.login_confirm),
+    path('loginbyconfirm', views.login_by_confirm),
     path('logout', views.logout),
     path('changepassword', views.change_password),
     path('user/<uid>/', views.get_info),

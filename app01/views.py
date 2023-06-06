@@ -224,7 +224,7 @@ def like_follow_element(space, ses, is_like, is_follow, is_like_element, is_foll
             data.SpaceLikes.objects.filter(space_id=space, user_id=get_user_by_id(ses['user_id'])).delete()
             ret_dict['liked'] = False
         else:
-            activities_add(ses['user_id'], 0, ele_type, space.id, 0, '点赞了'+ele_type)
+            activities_add(ses['user_id'], 0, ele_type, space.id, 0, '点赞了' + ele_type)
             data.SpaceLikes.objects.create(space_id=space,
                                            user_id=get_user_by_id(ses['user_id']), like_time=get_time_now())
             ret_dict['liked'] = True
@@ -2057,7 +2057,6 @@ def login(request):
         email = request.POST.get('email')  # 获取请求数据
         password = request.POST.get('password')
 
-
         try:
             # print(email)
             user = User.objects.get(email=email)
@@ -2079,6 +2078,45 @@ def login(request):
         return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
 
 
+@csrf_exempt
+def login_confirm(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')  # 获取请求数据
+
+        new_user = User.objects.get(email=email)
+        code = make_confirm_string(new_user)
+        try:
+            send_email_confirm(email, code)
+        except:
+            new_user.delete()
+            return JsonResponse({'error': 1006, 'msg': '验证邮件发送失败，请稍后再试!'})
+        return JsonResponse({'error': 1, 'msg': '发送验证码成功'})
+    return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+@csrf_exempt
+def login_by_confirm(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')  # 获取请求数据
+        # print(email)
+        code = request.POST.get('code')
+        user = User.objects.get(email=email)
+        try:
+            confirm = ConfirmString.objects.get(code=code)
+        except:
+            return JsonResponse({'error': 2002, 'msg': "验证码错误"})
+        c_time = confirm.c_time.replace(tzinfo=utc)
+        now = datetime.datetime.now().replace(tzinfo=utc)
+        if now > c_time + datetime.timedelta(3):
+            return JsonResponse({'error': 2003, 'msg': "确认邮件已过期"})
+        else:
+            if request.session.get('uid') == user.id:
+                return JsonResponse({'error': 1009, 'msg': "已经登录"})
+            request.session['uid'] = user.id  # 密码正确则将用户名存储于session（django用于存储登录信息的数据库位置）
+            request.session['user_id'] = user.id
+
+            confirm.delete()
+            return JsonResponse({'error': 1, 'msg': "验证成功"})
+    return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
 # 填入用户名和密码
 
 @csrf_exempt

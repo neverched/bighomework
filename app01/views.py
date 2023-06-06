@@ -872,9 +872,9 @@ def space_exercises_index(request, space_id):
         total = exercises_set.count()
         for each in exercises_set:
             each_dict = model_to_dict(each)
-            each_dict['likes'] = data.Likes.objects.filter(liked_type='习题', liked_id=each_dict['id']).count()
+            each_dict['likes'] = data.Likes.objects.filter(followed_type='习题', followed_id=each_dict['id']).count()
             each_dict['comments'] = len(get_comments_list(space, each_dict['id'], '习题'))
-            each_dict['follows'] = data.Follows.objects.filter(liked_type='习题', liked_id=each_dict['id']).count()
+            each_dict['follows'] = data.Follows.objects.filter(followed_type='习题', followed_id=each_dict['id']).count()
             query_list.append(each_dict)
 
         is_like = request.POST.get('is_like')
@@ -1108,7 +1108,7 @@ def space_questions(request, space_id, questions_id):
             })
         ele_dict = model_to_dict(question)
         ele_dict['likes'] = data.Likes.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
-        ele_dict['follows'] = data.Follows.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
+        ele_dict['follows'] = data.Follows.objects.filter(followed_type=ele_type, followed_id=ele_dict['id']).count()
 
         ele_dict['ele_liked'] = False
         ele_dict['ele_followed'] = False
@@ -1200,7 +1200,7 @@ def space_exercises(request, space_id, exercises_id):
 
         ele_dict = model_to_dict(exercise)
         ele_dict['likes'] = data.Likes.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
-        ele_dict['follows'] = data.Follows.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
+        ele_dict['follows'] = data.Follows.objects.filter(followed_type=ele_type, followed_id=ele_dict['id']).count()
 
         ele_dict['ele_liked'] = False
         ele_dict['ele_followed'] = False
@@ -1275,7 +1275,7 @@ def space_groups(request, space_id, groups_id):
         ele_type = '习题'
         ele_dict = model_to_dict(group)
         ele_dict['likes'] = data.Likes.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
-        ele_dict['follows'] = data.Follows.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
+        ele_dict['follows'] = data.Follows.objects.filter(followed_type=ele_type, followed_id=ele_dict['id']).count()
 
         ele_dict['ele_liked'] = False
         ele_dict['ele_followed'] = False

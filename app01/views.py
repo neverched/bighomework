@@ -110,6 +110,7 @@ def like_follow_space(space, ses, is_like, is_follow, ret_dict, query_list, tota
             ret_dict['liked'] = False
         else:
             data.SpaceLikes.objects.create(space_id=space.id, user_id=ses['user_id'], like_time=get_time_now())
+
             ret_dict['liked'] = True
         return JsonResponse({
             'errno': '200',
@@ -158,6 +159,7 @@ def like_follow_element(space, ses, is_like, is_follow, is_like_element, is_foll
             data.SpaceLikes.objects.filter(space_id=space.id, user_id=ses['user_id']).delete()
             ret_dict['liked'] = False
         else:
+            activities_add(ses['user_id'], 0, 'spaces', space.id, 0, '点赞了空间')
             data.SpaceLikes.objects.create(space_id=space.id, user_id=ses['user_id'], like_time=get_time_now())
             ret_dict['liked'] = True
         return JsonResponse({
@@ -177,6 +179,7 @@ def like_follow_element(space, ses, is_like, is_follow, is_like_element, is_foll
             data.SpaceFollows.objects.filter(space_id=space.id, user_id=ses['user_id']).delete()
             ret_dict['followed'] = False
         else:
+            activities_add(ses['user_id'], 0, 'spaces', space.id, 0, '关注了空间')
             data.SpaceFollows.objects.create(space_id=space.id, user_id=ses['user_id'], like_time=get_time_now())
             ret_dict['followed'] = True
         return JsonResponse({

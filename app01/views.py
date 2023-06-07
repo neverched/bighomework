@@ -2685,7 +2685,9 @@ def get_followings(request, uid):
                 "uid": user.id,
                 "username": user.username,
                 "fans_cnt": fans_cnt,
-                "like_cnt": user.like
+                "like_cnt": user.like,
+                "gender": user.gender,
+                "address": user.destination
             }
             user_need.append(user_act)
 
@@ -2711,7 +2713,9 @@ def get_fans(request, uid):
                 "uid": user.id,
                 "username": user.username,
                 "fans_cnt": user.followers,
-                "like_cnt": user.like
+                "like_cnt": user.like,
+                "gender": user.gender,
+                "address": user.destination
             }
             fan_need.append(user_act)
         return JsonResponse({'error': 1, 'msg': '获取关注列表成功', 'data': fan_need})

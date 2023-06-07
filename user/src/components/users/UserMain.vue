@@ -55,7 +55,6 @@ const handleSon = (type) => {
 onMounted(() => {
   activeName.value = 'activities'
   _this.$router.push({ name: 'activities' })
-  _this.$parent
 })
 
 </script>

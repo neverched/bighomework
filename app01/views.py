@@ -2837,6 +2837,7 @@ def search(request):
                 each_dict['likes'] = data.Likes.objects.filter(liked_id=each_dict['id'], liked_type='资源').count()
                 each_dict['follows'] = data.Follows.objects.filter(followed_id=each_dict['id'],
                                                                    followed_type='资源').count()
+                each_dict['creator_name'] = each.user_id.username
                 resources_need.append(each_dict)
             resources_need = order_query_list(resources_need, method)
             return JsonResponse({'error': 1, 'msg': '搜索资源成功', 'data': resources_need})
@@ -2867,6 +2868,7 @@ def search(request):
                 each_dict['likes'] = data.Likes.objects.filter(liked_id=each_dict['id'], liked_type='讨论').count()
                 each_dict['follows'] = data.Follows.objects.filter(followed_id=each_dict['id'],
                                                                    followed_type='讨论').count()
+                each_dict['creator_name'] = each.user_id.username
                 questions_need.append(each_dict)
             questions_need = order_query_list(questions_need, method)
             return JsonResponse({'error': 1, 'msg': '搜索讨论成功', 'data': questions_need})
@@ -2900,6 +2902,7 @@ def search(request):
                 each_dict['likes'] = data.Likes.objects.filter(liked_id=each_dict['id'], liked_type='习题').count()
                 each_dict['follows'] = data.Follows.objects.filter(followed_id=each_dict['id'],
                                                                    followed_type='习题').count()
+                each_dict['creator_name'] = each.user_id.username
                 exercises_need.append(each_dict)
             exercises_need = order_query_list(exercises_need, method)
             return JsonResponse({'error': 1, 'msg': '搜索习题成功', 'data': exercises_need})

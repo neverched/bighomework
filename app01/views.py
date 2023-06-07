@@ -8,7 +8,7 @@ import datetime
 import json
 import re
 
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse
 
 from django.views.decorators.csrf import csrf_exempt
 from pytz import utc
@@ -691,6 +691,7 @@ def space_resources_index(request, space_id):
             print(each.file)
             each_dict = model_to_dict(each, exclude=['file'])
             each_dict['title'] = each_dict['resource_name']
+            each_dict['content'] = each_dict['introduction']
             each_dict['user_name'] = get_user_by_id(each_dict['user_id']).username
             each_dict['likes'] = data.Likes.objects.filter(liked_type='资源', liked_id=each_dict['id']).count()
             each_dict['follows'] = data.Follows.objects.filter(followed_type='资源',
@@ -876,8 +877,9 @@ def space_exercises_index(request, space_id):
         total = exercises_set.count()
         for each in exercises_set:
             each_dict = model_to_dict(each)
+            each_dict['title'] = each_dict['type']
             each_dict['user_name'] = get_user_by_id(each_dict['user_id']).username
-            each_dict['likes'] = data.Likes.objects.filter(followed_type='习题', followed_id=each_dict['id']).count()
+            each_dict['likes'] = data.Likes.objects.filter(liked_type='习题', liked_id=each_dict['id']).count()
             each_dict['comments'] = len(get_comments_list(space, each_dict['id'], '习题'))
             each_dict['follows'] = data.Follows.objects.filter(followed_type='习题', followed_id=each_dict['id']).count()
             query_list.append(each_dict)
@@ -1011,6 +1013,7 @@ def space_resources(request, space_id, resources_id):
 
         ele_dict = model_to_dict(resource, exclude=['file'])
         ele_dict['title'] = ele_dict['resource_name']
+        ele_dict['content'] = ele_dict['introduction']
         ele_dict['creator'] = model_to_dict(get_user_by_id(ele_dict['user_id']))
         ele_dict['likes'] = data.Likes.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
         ele_dict['follows'] = data.Follows.objects.filter(followed_type=ele_type, followed_id=ele_dict['id']).count()
@@ -1211,6 +1214,7 @@ def space_exercises(request, space_id, exercises_id):
             })
 
         ele_dict = model_to_dict(exercise)
+        ele_dict['title'] = ele_dict['type']
         ele_dict['creator'] = model_to_dict(get_user_by_id(ele_dict['user_id']))
         ele_dict['likes'] = data.Likes.objects.filter(liked_type=ele_type, liked_id=ele_dict['id']).count()
         ele_dict['follows'] = data.Follows.objects.filter(followed_type=ele_type, followed_id=ele_dict['id']).count()
@@ -2785,3 +2789,28 @@ def search(request):
     return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
 
 
+@csrf_exempt
+def get_file_by_id(request, resource_id):
+    if request.method == 'POST':
+        ses = request.session
+        resource = data.SpaceResources.objects.get(id=resource_id)
+        if resource is None:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '未找到对应资源'
+            })
+        print(resource.file.name)
+        url = 'media/'+resource.file.name
+        try:
+            response = FileResponse(open(url, 'rb'))
+            response['content_type'] = "application/octet-stream"
+            response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(url)
+            return response
+        except FileNotFoundError:
+            return JsonResponse({
+                'errno': '404',
+                'msg': '文件未找到'})
+    else:
+        return JsonResponse({
+            'errno': '405',
+            'msg': '请求方式错误'})

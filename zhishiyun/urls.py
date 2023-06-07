@@ -69,6 +69,7 @@ urlpatterns = [
     path('user/<uid>/followings', views.get_followings),
     path('user/<uid>/fans', views.get_fans),
     path('user/<uid>/follow', views.follow_people),
+    path('file/<resource_id>', views.get_file_by_id)
     # path('postarticle', postarticle),
     # path('search',search)
 ]

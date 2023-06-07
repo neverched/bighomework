@@ -2233,10 +2233,10 @@ def edit_info(request, uid):
 def get_activities(request):
     if request.method == 'GET':
         uid = request.session.get('uid')
-        try:
-            follow = User.objects.get(id=uid)
-        except:
-            return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
+        # try:
+        #     follow = User.objects.get(id=uid)
+        # except:
+        #     return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
         activities = Activities.objects.filter(hosts=uid)
 
         activities_need = []
@@ -2630,9 +2630,14 @@ def get_followings(request, uid):
 
         for follow in follows:
             user = User.objects.get(id=follow.followed_id)
+            # print(user.id)
+            fans_cnt = Follows.objects.filter(following_id=user, followed_type='people').count()
+            #likes_cnt =
             user_act = {
                 "uid": user.id,
                 "username": user.username,
+                "fans_cnt": fans_cnt,
+                "like_cnt": user.like
             }
             user_need.append(user_act)
 
@@ -2657,6 +2662,8 @@ def get_fans(request, uid):
             user_act = {
                 "uid": user.id,
                 "username": user.username,
+                "fans_cnt": user.followers,
+                "like_cnt": user.like
             }
             fan_need.append(user_act)
         return JsonResponse({'error': 1, 'msg': '获取关注列表成功', 'data': fan_need})
@@ -2694,6 +2701,8 @@ def follow_people(request, uid):
             new_follow.following = follow
             new_follow.save()
             activities_add(user_id, 0, '用户', uid, 0, '关注了用户')
+            follow.save()
+            fan.save()
 
             return JsonResponse({'error': 1, 'msg': '关注成功'})
 
@@ -2702,6 +2711,7 @@ def follow_people(request, uid):
         follow.delete()
         follow.id = uid
         follow.save()
+        fan.save()
         return JsonResponse({'error': 1, 'msg': '取消关注成功'})
 
     return JsonResponse({'error': 1001, 'msg': "请求方式错误"})

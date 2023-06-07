@@ -2337,7 +2337,7 @@ def get_questions(request, uid):
         questions_need = []
 
         for question in questions:
-            studyspace = StudySpaces.objects.get(id=question.space_id)
+            studyspace = StudySpaces.objects.get(id=question.space_id.id)
             user_act = {
                 "id": question.id,
                 "space_name": studyspace.space_name,
@@ -2364,13 +2364,14 @@ def get_answers(request, uid):
         answers_need = []
 
         for answer in answers:
-            studyspace = StudySpaces.objects.get(id=answer.space_id)
+            studyspace = StudySpaces.objects.get(id=answer.space_id.id)
             user_act = {
                 "id": answer.id,
                 "space_name": studyspace.space_name,
                 "content": answer.content,
                 "create_time": answer.create_time,
                 "from_space_id": studyspace.id,
+                "element_id": answer.element_id,
                 "uid": uid,
             }
             answers_need.append(user_act)

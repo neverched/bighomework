@@ -11,7 +11,8 @@
 
 <script>
     export default {
-        name:'NoticeList'
+        name:'User',
+		props:['id']
     }
 </script>
 

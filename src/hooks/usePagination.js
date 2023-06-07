@@ -1,0 +1,35 @@
+import { ref, watch, computed } from 'vue';
+import { chunk } from '@/utils';
+
+export default function usePagination(list) {
+  const pageSize = ref(5);
+  const page = ref(1);
+  const total = computed(() => list.value.length);
+  const paging = ref(chunk(list.value, pageSize.value));
+  const current = ref(paging.value[0]);
+
+  const onCurrentChange = () => {
+    current.value = paging.value[page.value - 1];
+  };
+
+  watch(page, onCurrentChange);
+
+  watch(
+    list,
+    () => {
+      page.value = 1;
+      paging.value = chunk(list.value, pageSize.value);
+      total.value = list.value.length;
+      onCurrentChange();
+    },
+    { deep: true }
+  );
+
+  return {
+    current,
+    total,
+    page,
+    pageSize,
+    onCurrentChange
+  };
+}

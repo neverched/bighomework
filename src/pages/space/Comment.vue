@@ -5,7 +5,7 @@
                 <el-avatar>  
                     <el-icon><UserFilled /></el-icon>
                 </el-avatar>
-                {{comment.user.name}} - 评论于 {{comment.date}}
+                {{comment.commenter.username}} - 评论于 {{comment.create_time}}
             </el-text>
         </el-col>
     </el-row>
@@ -15,11 +15,6 @@
             <el-text class="spacing">
                 {{comment.content}}
             </el-text>
-        </el-col>
-    </el-row>
-    <el-row>
-        <el-col :span="4" :offset="20">
-            <el-button type="primary" style="margin-top:10px;">点赞</el-button>
         </el-col>
     </el-row>
     <el-divider />

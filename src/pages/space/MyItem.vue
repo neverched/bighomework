@@ -1,21 +1,21 @@
 <template>
 	<div class="all" @click="toDetail">
-		<el-text class="mx-1 title" size="large">{{item.title}}</el-text>
-		<el-text class="mx-1 right">
+		<el-text class="mx-1 title" size="large" truncated>{{item.title}}</el-text>
+		<el-text class="mx-1 right" v-show="type != 'notices'">
 			<el-icon><Medal /></el-icon>
-			{{item.thumbsUpNum}}
-			<el-icon style="margin-left:10px;"><ChatSquare /></el-icon>
-			{{item.disscussNum}}
+			{{item.likes}}
+			<el-icon style="margin-left:10px;"><Star /></el-icon>
+			{{item.follows}}
 		</el-text>
 		<br>
 		<el-text class="mx-1">
 			<el-avatar style="margin-top:15px">  
 				<el-icon><UserFilled /></el-icon>
 			</el-avatar>
-			{{item.user.userName}} - 创建于{{item.createDate}}
+			{{item.user_name}} - 创建于{{item.create_time}}
 		</el-text>
 		<el-text class="mx-1 right" style="margin-top:25px">
-			更新于{{item.updateDate}}
+			更新于{{item.last_update_time}}
 		</el-text>
 		<el-divider />
 	</div>
@@ -24,17 +24,18 @@
 <script>
 	export default {
 		name:'MyItem',
-		props:['item'],
+		props:['item','type'],
 		methods:{
 			toDetail(){
 				this.$router.push({
 					name:'detail',
-					params:{
-						id:this.item.id
+					query:{
+						id:this.item.id,
+						type:this.type
 					}
 				})
 			}
-		}
+		},
 	}
 </script>
 
@@ -48,6 +49,7 @@
 	.all {
 		padding: 5px;
 		border-radius: 20px;
+		margin-bottom: 5px;
 	}
 	.all:hover {
 		background-color: #d9ecff;

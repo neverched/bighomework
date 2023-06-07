@@ -4,13 +4,7 @@
       		<MyHeader/>
 		</el-header>
 		<el-container>
-			<el-aside width="200px">
-				<MyAside/>
-			</el-aside>
-			<el-main>
-				<SpaceHeader/>
-				<router-view></router-view>
-			</el-main>
+			<router-view></router-view>
 		</el-container>
     </el-container>
 	
@@ -18,13 +12,10 @@
 
 <script>
 	import MyHeader from './components/MyHeader.vue'
-	import SpaceHeader from './components/SpaceHeader.vue'
-	import MyAside from './components/MyAside.vue'
-	
+
 	export default {
 		name: 'App',
-		components:{MyHeader, SpaceHeader, MyAside}
-
+		components:{MyHeader},
 	}
 </script>
 

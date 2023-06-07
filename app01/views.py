@@ -2867,7 +2867,7 @@ def search(request):
                 each_dict['likes'] = data.Likes.objects.filter(liked_id=each_dict['id'], liked_type='讨论').count()
                 each_dict['follows'] = data.Follows.objects.filter(followed_id=each_dict['id'],
                                                                    followed_type='讨论').count()
-                questions_need.append(each)
+                questions_need.append(each_dict)
             questions_need = order_query_list(questions_need, method)
             return JsonResponse({'error': 1, 'msg': '搜索讨论成功', 'data': questions_need})
 
@@ -2900,7 +2900,7 @@ def search(request):
                 each_dict['likes'] = data.Likes.objects.filter(liked_id=each_dict['id'], liked_type='习题').count()
                 each_dict['follows'] = data.Follows.objects.filter(followed_id=each_dict['id'],
                                                                    followed_type='习题').count()
-                exercises_need.append(each)
+                exercises_need.append(each_dict)
             exercises_need = order_query_list(exercises_need, method)
             return JsonResponse({'error': 1, 'msg': '搜索习题成功', 'data': exercises_need})
         elif types == 'users':

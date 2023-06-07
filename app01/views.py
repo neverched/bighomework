@@ -1151,6 +1151,7 @@ def space_questions(request, space_id, questions_id):
                 return JsonResponse({
                     'errno': '402',
                     'msg': '评论者id不存在'})
+            commenter = commenter[0]
             each['commenter'] = model_to_dict(commenter)
 
         is_like = request.POST.get('is_like')
@@ -1245,6 +1246,7 @@ def space_exercises(request, space_id, exercises_id):
                 return JsonResponse({
                     'errno': '402',
                     'msg': '评论者id不存在'})
+            commenter = commenter[0]
             each['commenter'] = model_to_dict(commenter)
 
         is_like = request.POST.get('is_like')
@@ -1321,6 +1323,7 @@ def space_groups(request, space_id, groups_id):
                 return JsonResponse({
                     'errno': '402',
                     'msg': '评论者id不存在'})
+            commenter = commenter[0]
             each['commenter'] = model_to_dict(commenter)
 
         is_like = request.POST.get('is_like')

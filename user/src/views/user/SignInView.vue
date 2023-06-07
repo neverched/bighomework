@@ -11,7 +11,8 @@
           <el-input class="input" v-model="form.email" placeholder="邮箱" type="email"></el-input>
         </el-form-item>
         <el-form-item class="input-item">
-          <el-input class="input" v-model="form.password" placeholder="密码" type="password" show-password></el-input>
+          <el-input class="input" v-model="form.password" placeholder="密码(8~18位, 有且仅有字母与数字)" type="password"
+            show-password></el-input>
         </el-form-item>
         <el-form-item class="input-item">
           <el-button class="input" @click="handleClickPassLogin" type="primary" style="width: 100%">登录</el-button>
@@ -25,11 +26,12 @@
         <el-form-item class="input-item">
           <div class="verify-code-box">
             <el-input class="input" v-model="form.code" placeholder="验证码"></el-input>
-            <span :style="verifyCodeStyle" @click="checkEmail" class="verify-code-btn">{{ verifyCodeBtn }}</span>
+            <span :style="verifyCodeStyle" @click="handleClickVerifyCodeLogin" class="verify-code-btn">{{ verifyCodeBtn
+            }}</span>
           </div>
         </el-form-item>
         <el-form-item class="input-item">
-          <el-button class="input" type="primary" style="width: 100%">登录</el-button>
+          <el-button @click="handleClickCodeLogin" class="input" type="primary" style="width: 100%">登录</el-button>
         </el-form-item>
       </el-form>
       <span class="login-signin" @click="handleChangeLogin">
@@ -73,13 +75,21 @@
   </div>
 </template>
 <script>
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, getCurrentInstance } from 'vue'
 import api from '@/plugins/axiosInstance'
 import { ElMessage } from 'element-plus'
 
 export default {
   name: 'SignInView',
   setup() {
+    const instance = getCurrentInstance();
+
+    let _this = null
+
+    if (instance != null) {
+      _this = instance.appContext.config.globalProperties //vue3获取当前this
+    }
+
     let url = ref('https://vue.learnerhub.net/static/img/logo1.c54dc75.png')
     let form = reactive({
       name: '',
@@ -131,10 +141,54 @@ export default {
       formData.append('email', form.email)
       formData.append('password', form.password)
       api.post('login', formData).then(res => {
-        console.log('登录成功', res)
-        clearForm(form)
+        if (res.data.error == 1) {
+          clearForm(form)
+          ElMessage({
+            message: '登陆成功',
+            type: 'success',
+          })
+          //TODO: 跳转到主界面
+          _this.$router.push('/');
+        } else {
+          ElMessage({
+            message: '登陆失败: ' + res.data.msg,
+            type: 'error',
+          })
+        }
       }).catch(err => {
         console.log('登录失败', err)
+        ElMessage({
+          message: '登陆失败:' + err.code,
+          type: 'error',
+        })
+        clearForm(form)
+      })
+    }
+
+    const handleClickCodeLogin = () => {
+      const formData = new FormData()
+      formData.append('code', form.code)
+      api.post('loginbyconfirm', formData).then(res => {
+        if (res.data.error == 1) {
+          clearForm(form)
+          ElMessage({
+            message: '登陆成功',
+            type: 'success',
+          })
+          //TODO: 跳转到主界面
+          _this.$router.push('/');
+        } else {
+          ElMessage({
+            message: '登陆失败: ' + res.data.msg,
+            type: 'error',
+          })
+        }
+      }).catch(err => {
+        console.log('登录失败', err)
+        ElMessage({
+          message: '登陆失败:' + err.code,
+          type: 'error',
+        })
         clearForm(form)
       })
     }
@@ -147,6 +201,16 @@ export default {
     const isPasswordLegal = (password) => {
       const reg = /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,18}$/
       return reg.test(password)
+    }
+
+    const handleClickVerifyCodeLogin = () => {
+      if (!form.email) {
+        alert('邮箱不能为空')
+      } else if (!isEmailLegal(form.email)) {
+        alert('邮箱格式不正确')
+      } else {
+        handleGetCode(login_getCode)
+      }
     }
 
     const handleClickVerifyCode = () => {
@@ -165,11 +229,11 @@ export default {
       } else if (form.password !== form.confirmPassword) {
         alert('两次密码不一致')
       } else {
-        handleGetCode()
+        handleGetCode(reg_getCode)
       }
     }
 
-    const handleGetCode = () => {
+    const handleGetCode = (getCode) => {
       getCode()
       let count = 60
       verifyCodeStyle.value = 'pointer-events:none;'
@@ -185,7 +249,7 @@ export default {
       }, 1000)
     }
 
-    const getCode = () => {
+    const reg_getCode = () => {
       const formData = new FormData()
       formData.append('username', form.name)
       formData.append('email', form.email)
@@ -193,10 +257,42 @@ export default {
       formData.append('password2', form.confirmPassword)
       api.post('register', formData).then(res => {
         console.log('获取验证码成功', res)
+        if (res.data.error == 1) {
+          ElMessage({
+            message: '验证码已发送至邮箱, 请注意查收',
+            type: 'success'
+          })
+        } else {
+          ElMessage({
+            message: '获取验证码失败: ' + res.data.msg,
+            type: 'warning'
+          })
+        }
+      }).catch(err => {
+        console.log('获取验证码失败', err)
         ElMessage({
-          message: '验证码已发送至邮箱, 请注意查收',
-          type: 'success'
+          message: '获取验证码失败, 请稍后重试',
+          type: 'error'
         })
+      })
+    }
+
+    const login_getCode = () => {
+      const formData = new FormData()
+      formData.append('email', form.email)
+      api.post('login/confirm', formData).then(res => {
+        console.log('获取验证码结果: ', res)
+        if (res.data.error == 1) {
+          ElMessage({
+            message: '验证码已发送至邮箱, 请注意查收',
+            type: 'success'
+          })
+        } else {
+          ElMessage({
+            message: '获取验证码失败: ' + res.data.msg,
+            type: 'warning'
+          })
+        }
       }).catch(err => {
         console.log('获取验证码失败', err)
         ElMessage({
@@ -240,17 +336,24 @@ export default {
       const formData = new FormData()
       formData.append('code', form.code)
       api.post('register/confirm', formData).then(res => {
-        console.log('注册成功', res)
-        ElMessage({
-          message: '注册成功',
-          type: 'success'
-        })
+        if (res.data.error == 1) {
+          clearForm(form)
+          ElMessage({
+            message: '注册成功',
+            type: 'success',
+          })
+        } else {
+          ElMessage({
+            message: '注册失败: ' + res.data.msg,
+            type: 'error',
+          })
+        }
         clearForm(form)
         activeForm.value = 'login'
       }).catch(err => {
         console.log('注册失败', err)
         ElMessage({
-          message: '注册失败, 请稍后重试',
+          message: '注册失败: ' + err.code,
           type: 'error'
         })
         // clearForm(form)
@@ -281,7 +384,9 @@ export default {
       handleClickVerifyCode,
       handleClickRegister,
       handleClickPassLogin,
-      handleClickLogout
+      handleClickLogout,
+      handleClickCodeLogin,
+      handleClickVerifyCodeLogin
     }
   }
 }

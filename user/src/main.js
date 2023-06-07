@@ -29,4 +29,4 @@ app.use(store)
 
 app.mount('#app')
 
-app.config.globalProperties.$axios = axios
+app.config.globalProperties.$http = axios

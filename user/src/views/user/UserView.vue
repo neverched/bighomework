@@ -2,21 +2,21 @@
   <div>
     <MyHeader></MyHeader>
     <div class="con-box">
-    <div class="container">
-      <el-container>
-        <el-header height="auto">
-          <UserHeader></UserHeader>
-        </el-header>
+      <div class="container">
         <el-container>
-          <el-aside width="150">
-            <UserAside></UserAside>
-          </el-aside>
-          <el-main>
-            <router-view></router-view>
-          </el-main>
+          <el-header height="auto" style="padding: 0px">
+            <UserHeader></UserHeader>
+          </el-header>
+          <el-container style="margin-top: 10px">
+            <el-aside width="auto">
+              <UserAside></UserAside>
+            </el-aside>
+            <el-main style="padding: 0px; margin-left: 10px; border-radius: 8px;">
+              <UserMain></UserMain>
+            </el-main>
+          </el-container>
         </el-container>
-      </el-container>
-    </div>
+      </div>
     </div>
   </div>
 </template>
@@ -24,6 +24,7 @@
 import MyHeader from '@/components/MyHeader.vue'
 import UserAside from '@/components/users/UserAside.vue'
 import UserHeader from '@/components/users/UserHeader.vue'
+import UserMain from '@/components/users/UserMain.vue'
 
 </script>
 <style scoped>
@@ -33,11 +34,11 @@ import UserHeader from '@/components/users/UserHeader.vue'
   background-color: #f5f5f5;
   display: flex;
   justify-content: center;
-  /*align-items: center;*/
+  /* align-items: center; */
 }
 
 .container {
-  width: 1070px;
+  width: auto;
   margin-top: 5px;
   border-radius: 8px;
 }

@@ -19,50 +19,54 @@ export default createRouter({
 				{
 					name:'activities',
 					path:'activities',
+					component: () => import('@/components/users/MainActivities.vue')
 				},
 				{
 					name:'spaces',
 					path:'spaces',
+					component: () => import('@/components/users/MainSpaces.vue')
 				},
 				{
 					name:'docs',
 					path:'docs',
+					component: () => import('@/components/users/MainDocs.vue')
 				},
 				{
 					name:'issues',
 					path:'issues',
+					component: () => import('@/components/users/MainIssues.vue')
 				},
 				{
 					name:'answers',
 					path:'answers',
+					component: () => import('@/components/users/MainAnswers.vue')
 				},
 				{
 					name:'questions',
 					path:'questions',
+					component: () => import('@/components/users/MainQuestions.vue')
 				},
 				{
 					name:'collections',
 					path:'collections',
+					component: () => import('@/components/users/MainCollections.vue')
 				},
 				{
 					name:'following',
-					path:'following',
+					path:'following/:type',
+					component: () => import('@/components/users/MainFollowing.vue')
 				},
 			]
 		},
 		{
 			name:'edit',
-			path:'/users/edit',
+			path:'/users/:id/edit',
+			component: () => import('@/views/user/EditView.vue')
 		},
 		{
 			name:'settings',
 			path:'/users/settings',
-			children: [
-				{
-					name:'password',
-					path:'password',
-				}
-			]
+			component: () => import('@/views/user/ChangePWDView.vue')
 		},
 	]
 })

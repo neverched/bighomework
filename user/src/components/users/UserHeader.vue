@@ -16,11 +16,11 @@
             <el-text style="color: black; font-size: large; font-weight: bold;">{{ info.name }}</el-text>
             <span class="my-space"></span>
             <el-tag v-if="info.gender" type="info" class="mx-1" effect="light" round>
-              <el-icon class="info-cion" v-if="info.gender == 'male'" color="#409EFC">
+              <el-icon class="info-cion" v-if="info.gender == 0" color="#409EFC">
                 <Male />
               </el-icon>
               <el-icon class="info-cion" v-else color="#F56C6C">
-                <Male />
+                <Female />
               </el-icon>
               {{ gender2Chinese }}
             </el-tag>
@@ -52,14 +52,23 @@
 </template>
 <script setup>
 // import { Male, Female } from '@element-plus/icons-vue/dist/types';
-import { reactive, computed } from 'vue'
+import { reactive, computed, onMounted, getCurrentInstance } from 'vue'
+import api from '@/plugins/axiosInstance'
+
+const instance = getCurrentInstance();
+
+let _this = null
+
+if (instance != null) {
+  _this = instance.appContext.config.globalProperties //vue3获取当前this
+}
 
 let coverImg = require('@/assets/default_user_cover.jpg'); // 封面图片
 let avatarImg = require('@/assets/minecraft-creeper-face.png'); // 头像图片
 
 const info = reactive({
   name: 'Zhang San',
-  gender: 'male',
+  gender: 0,
   address: '北京市',
   profession: '软件工程',
   company: '北京航空航天大学',
@@ -72,6 +81,12 @@ const handleCoverClick = () => {
 
 const handleEditClick = () => {
   console.log('edit click')
+  _this.$router.push({
+    name: 'edit',
+    params: {
+      id: _this.$route.params.id
+    }
+  })
 }
 
 const handleClickAvatar = () => {
@@ -79,9 +94,37 @@ const handleClickAvatar = () => {
 }
 
 const gender2Chinese = computed(() => {
-  return info.gender == 'male' ? '男' : '女';
+  return info.gender == 0 ? '男' : '女';
 })
 
+let userid = -1;
+
+onMounted(() => {
+  api.get('give').then(res => {
+    if (res.data.error == 1) {
+      userid = res.data.data;
+    } else {
+      return;
+    }
+    api.get('user/' + userid.toString()).then(res => {
+      if (res.data.error == 1) {
+        const data = res.data;
+        info.name = data.username;
+        info.gender = data.gender;
+        info.address = data.destination;
+        info.profession = data.job;
+        info.company = data.organization;
+        info.profile = data.intro;
+      } else {
+        return;
+      }
+    }).catch(err => {
+      console.log(err);
+    })
+  }).catch(err => {
+    console.log(err);
+  })
+})
 </script>
 <style scoped>
 .container {

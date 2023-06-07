@@ -27,7 +27,7 @@ def make_confirm_string(user):
 def send_email_confirm(email, code):
     from django.core.mail import EmailMultiAlternatives
 
-    subject = '1'
+    subject = '来自知识荟的验证邮件'
 
     text_content = '''1\
                     如果你看到这条消息，说明你的邮箱服务器不提供HTML链接功能，请联系管理员！'''

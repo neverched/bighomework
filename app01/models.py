@@ -41,7 +41,8 @@ class Activities(models.Model):
     type = models.CharField(max_length=50)
     create_time = models.DateTimeField(auto_now_add=True)
     programs = models.CharField(max_length=256)
-    t_id = models.IntegerField(default=0)
+    t_id = models.IntegerField(default=0)  # 相应资源、问题的id
+    s_id = models.IntegerField(default=0)  # 问题/资源对应的空间的id
 
     class Meta:
         db_table = 'Activities'

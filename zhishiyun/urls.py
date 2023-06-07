@@ -52,15 +52,18 @@ urlpatterns = [
     path('register', views.register),  # 指定register函数的路由为register
     path('register/confirm', views.user_confirm),
     path('login', views.login),
+    path('login/confirm', views.login_confirm),
+    path('loginbyconfirm', views.login_by_confirm),
     path('logout', views.logout),
     path('changepassword', views.change_password),
     path('user/<uid>/', views.get_info),
     path('user/<uid>/edit', views.edit_info),
-    path('user/<uid>/activities', views.get_activities),
+    path('user/activities', views.get_activities),
     path('user/<uid>/adminspaces', views.get_admin_spaces),
     path('user/<uid>/followspaces', views.get_follow_spaces),
     path('user/<uid>/resources', views.get_resources),
     path('user/<uid>/questions', views.get_questions),
+    path('user/<uid>/answers', views.get_answers),
     path('user/<uid>/exercises', views.get_exercises),
     path('user/<uid>/collects/resources', views.get_collects_resources),
     path('user/<uid>/collects/questions', views.get_collects_questions),
@@ -69,7 +72,7 @@ urlpatterns = [
     path('user/<uid>/followings', views.get_followings),
     path('user/<uid>/fans', views.get_fans),
     path('user/<uid>/follow', views.follow_people),
-    path('file/<resource_id>', views.get_file_by_id)
+    path('file/<resource_id>', views.get_file_by_id),
     # path('postarticle', postarticle),
-    # path('search',search)
+     path('search',views.search)
 ]

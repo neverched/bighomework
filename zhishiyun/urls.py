@@ -75,5 +75,6 @@ urlpatterns = [
     path('api/file/<resource_id>', views.get_file_by_id),
     # path('postarticle', postarticle),
     path('api/search', views.search),
-    path('api/give', views.give_uid)
+    path('api/give', views.give_uid),
+    path('api/user/<uid>/resent', views.get_resent)
 ]

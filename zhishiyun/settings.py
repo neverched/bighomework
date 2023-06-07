@@ -136,5 +136,5 @@ EMAIL_FROM = 'dingzhen@126.com>'
 # 这⾥必须是True，否则发送不成功
 EMAIL_USE_TLS = True
 
-FRONTEND = 'http://127.0.0.1:8090'
+FRONTEND = 'http://127.0.0.1:8080'
 BACKEND = 'http://127.0.0.1:8000'

@@ -2094,6 +2094,7 @@ def login_confirm(request):
         return JsonResponse({'error': 1, 'msg': '发送验证码成功'})
     return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
 
+
 @csrf_exempt
 def login_by_confirm(request):
     if request.method == 'POST':
@@ -2118,6 +2119,8 @@ def login_by_confirm(request):
             confirm.delete()
             return JsonResponse({'error': 1, 'msg': "验证成功"})
     return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+
 # 填入用户名和密码
 
 @csrf_exempt
@@ -2239,7 +2242,7 @@ def get_admin_spaces(request, uid):
         except:
             return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
         studyspaces = StudySpaces.objects.filter(creator_id=get_user_by_id(uid))
-        studymembers = SpaceMembers.objects.filter(is_admin=1,user_id=get_user_by_id(uid))
+        studymembers = SpaceMembers.objects.filter(is_admin=1, user_id=get_user_by_id(uid))
         studyspaces2 = []
         for studymember in studymembers:
             studyspaces2.append(studymember.space_id)
@@ -2365,8 +2368,18 @@ def get_answers(request, uid):
 
         for answer in answers:
             studyspace = StudySpaces.objects.get(id=answer.space_id.id)
+            if answer.comment_type == 1:
+                q_content1 = SpaceResources.objects.get(id=answer.element_id)
+                q_content = q_content1.resource_name
+            elif answer.comment_type == 2:
+                q_content1 = SpaceQuestions.objects.get(id=answer.element_id)
+                q_content = q_content1.title
+            else:
+                q_content1 = SpaceExercises.objects.get(id=answer.element_id)
+                q_content = q_content1.type
             user_act = {
                 "id": answer.id,
+                "issue_title": q_content,
                 "space_name": studyspace.space_name,
                 "content": answer.content,
                 "create_time": answer.create_time,
@@ -2392,13 +2405,13 @@ def get_exercises(request, uid):
         exercises_need = []
 
         for exercise in exercises:
-            studyspace = StudySpaces.objects.get(id=exercise.space_id)
+            studyspace = StudySpaces.objects.get(id=exercise.space_id.id)
             user_act = {
                 "id": exercise.id,
                 "space_name": studyspace.space_name,
                 "content": exercise.content,
                 "create_time": exercise.create_time,
-                "from_space_id": studyspace.space_id,
+                "from_space_id": studyspace.id,
                 "difficulty": exercise.difficulty,
                 "type": exercise.type,
                 "uid": uid,
@@ -2434,7 +2447,7 @@ def get_collects_resources(request, uid):
                 "id": resource.id,
                 "space_name": studyspace.space_name,
                 "create_time": resource.create_time,
-                "file_name": resource.file_name,
+                "file_name": resource.resource_name,
                 "from_space_id": studyspace.id,
             }
             resources_need.append(user_act)
@@ -2499,7 +2512,7 @@ def get_collects_answers(request, uid):
         for collect in collects:
             a_id = collect.followed_id
             answer = SpaceComments.objects.get(id=a_id)
-            studyspace = StudySpaces.objects.filter(id=answer.space_id.id)
+            studyspace = StudySpaces.objects.get(id=answer.space_id.id)
             user_act = {
                 "id": answer.id,
                 "space_name": studyspace.space_name,
@@ -2527,7 +2540,7 @@ def get_collects_exercises(request, uid):
             return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
         if uid != user_id:
             return JsonResponse({'error': 1013, 'msg': "这不是你的主页，不能观看哦"})
-        collects = Follows.objects.filter(followed_type='练习', following=get_user_by_id(uid))
+        collects = Follows.objects.filter(followed_type='习题', following=get_user_by_id(uid))
 
         exercises_need = []
 
@@ -2540,7 +2553,7 @@ def get_collects_exercises(request, uid):
                 "space_name": studyspace.space_name,
                 "content": exercise.content,
                 "create_time": exercise.create_time,
-                "from_space_id": studyspace.space_id,
+                "from_space_id": studyspace.id,
                 "difficulty": exercise.difficulty,
                 "type": exercise.type,
                 "uid": uid,
@@ -2569,7 +2582,7 @@ def get_followings(request, uid):
             }
             user_need.append(user_act)
 
-        return JsonResponse({'error': 1, 'msg': '获取关注列表成功', 'data': user_need})
+        return JsonResponse({'error': 1, 'msg': '获取粉丝列表成功', 'data': user_need})
     return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
 
 
@@ -2586,14 +2599,13 @@ def get_fans(request, uid):
         fan_need = []
 
         for follow in follows:
-            user = User.objects.get(id=follow.following)
+            user = User.objects.get(id=follow.following.id)
             user_act = {
                 "uid": user.id,
                 "username": user.username,
-                "fans": user.followers,
             }
             fan_need.append(user_act)
-        return JsonResponse({'error': 1, 'msg': '获取粉丝列表成功', 'data': fan_need})
+        return JsonResponse({'error': 1, 'msg': '获取关注列表成功', 'data': fan_need})
     return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
 
 
@@ -2643,7 +2655,7 @@ def follow_people(request, uid):
 
 @csrf_exempt
 def search(request):
-    if request.method == 'GET':
+    if request.method == 'POST':
         recv = request.POST
         types = recv.get('types')  # 搜索类型
         text = recv.get('text')  # 搜索内容
@@ -2684,77 +2696,48 @@ def search(request):
 
         elif types == 'resources':
             if method == '最多点赞':
-                order['orderby_table'] = 'SpaceResources'
-                order['orderby_object'] = 'resources_likes'
-                order['orderby'] = ''  # 升序
-            elif method == '最多评论':
-                order['orderby_table'] = 'SpaceResources'
-                order['orderby_object'] = 'resources_comments'
-                order['orderby'] = ''  # 升序
+                order = 'id'
+            elif method == '最多关注':
+                order = 'id'
             elif method == '最近更新':
-                order['orderby_table'] = 'SpaceResources'
-                order['orderby_object'] = 'last_update_time'
-                order['orderby'] = '-'  # 降序
+                order = '-last_update_time'
             elif method == '最早更新':
-                order['orderby_table'] = 'SpaceResources'
-                order['orderby_object'] = 'last_update_time'
-                order['orderby'] = ''  # 升序
+                order = 'last_update_time'
             elif method == '最近创建':
-                order['orderby_table'] = 'SpaceResources'
-                order['orderby_object'] = 'create_time'
-                order['orderby'] = '-'  # 降序
+                order = '-create_time'
             elif method == '最早创建':
-                order['orderby_table'] = 'SpaceResources'
-                order['orderby_object'] = 'create_time'
-                order['orderby'] = ''  # 升序
+                order = 'create_time'
             else:
                 return JsonResponse({
                     'errno': '401',
                     'msg': 'POST参数order不合法'})
-            resources = SpaceResources.objects.filter(file_name__icontains=text).order_by(
-                order['orderby'] +
-                order['orderby_table'] + '__' +
-                order['orderby_object']
+            resources = SpaceResources.objects.filter(resource_name__icontains=text).order_by(
+                order
             )
             resources_need = []
 
-            for resource in resources:
-                studyspace = StudySpaces.objects.get(id=resource.space_id)
-                user_act = {
-                    "id": resource.id,
-                    "space_name": studyspace.space_name,
-                    "create_time": resource.create_time,
-                    "file_name": resource.file_name,
-                    "from_space_id": studyspace.id,
-                }
-                resources_need.append(user_act)
+            for each in resources:
+                each_dict = model_to_dict(each, exclude=['file'])
+                each_dict['likes'] = data.Likes.objects.filter(liked_id=each_dict['id'], liked_type='资源').count()
+                each_dict['follows'] = data.Follows.objects.filter(followed_id=each_dict['id'],
+                                                                   followed_type='资源').count()
+                resources_need.append(each_dict)
+            resources_need = order_query_list(resources_need, method)
             return JsonResponse({'error': 1, 'msg': '搜索资源成功', 'data': resources_need})
 
         elif types == 'questions':
             if method == '最多点赞':
-                order['orderby_table'] = 'SpaceQuestions'
-                order['orderby_object'] = 'questions_likes'
-                order['orderby'] = ''  # 升序
-            elif method == '最多评论':
-                order['orderby_table'] = 'SpaceQuestions'
-                order['orderby_object'] = 'questions_comments'
-                order['orderby'] = ''  # 升序
+                order = 'id'
+            elif method == '最多关注':
+                order = 'id'
             elif method == '最近更新':
-                order['orderby_table'] = 'SpaceQuestions'
-                order['orderby_object'] = 'last_update_time'
-                order['orderby'] = '-'  # 降序
+                order = '-last_update_time'
             elif method == '最早更新':
-                order['orderby_table'] = 'SpaceQuestions'
-                order['orderby_object'] = 'last_update_time'
-                order['orderby'] = ''  # 升序
+                order = 'last_update_time'
             elif method == '最近创建':
-                order['orderby_table'] = 'SpaceQuestions'
-                order['orderby_object'] = 'create_time'
-                order['orderby'] = '-'  # 降序
+                order = '-create_time'
             elif method == '最早创建':
-                order['orderby_table'] = 'SpaceQuestions'
-                order['orderby_object'] = 'create_time'
-                order['orderby'] = ''  # 升序
+                order = 'create_time'
             else:
                 return JsonResponse({
                     'errno': '401',
@@ -2763,44 +2746,28 @@ def search(request):
             questions = SpaceQuestions.objects.filter(Q(title__icontains=text)
                                                       | Q(content__icontains=text)).order_by(order)
             questions_need = []
-            for question in questions:
-                studyspace = StudySpaces.objects.get(id=question.space_id)
-                user_act = {
-                    "id": question.id,
-                    "space_name": studyspace.space_name,
-                    "question_title": question.title,
-                    "create_time": question.create_time,
-                    "from_space_id": studyspace.id,
-                    "uid": studyspace.creator_id,
-                }
-                questions_need.append(user_act)
-            return JsonResponse({'error': 1, 'msg': '搜索提问成功', 'data': questions_need})
+            for each in questions:
+                each_dict = model_to_dict(each, exclude=['space_picture'])
+                each_dict['likes'] = data.Likes.objects.filter(liked_id=each_dict['id'], liked_type='讨论').count()
+                each_dict['follows'] = data.Follows.objects.filter(followed_id=each_dict['id'],
+                                                                   followed_type='讨论').count()
+                questions_need.append(each)
+            questions_need = order_query_list(questions_need, method)
+            return JsonResponse({'error': 1, 'msg': '搜索讨论成功', 'data': questions_need})
 
         elif types == 'exercises':
             if method == '最多点赞':
-                order['orderby_table'] = 'SpaceExercises'
-                order['orderby_object'] = 'exercises_likes'
-                order['orderby'] = ''  # 升序
-            elif method == '最多评论':
-                order['orderby_table'] = 'SpaceExercises'
-                order['orderby_object'] = 'exercises_comments'
-                order['orderby'] = ''  # 升序
+                order = 'id'
+            elif method == '最多关注':
+                order = 'id'
             elif method == '最近更新':
-                order['orderby_table'] = 'SpaceExercises'
-                order['orderby_object'] = 'last_update_time'
-                order['orderby'] = '-'  # 降序
+                order = '-last_update_time'
             elif method == '最早更新':
-                order['orderby_table'] = 'SpaceExercises'
-                order['orderby_object'] = 'last_update_time'
-                order['orderby'] = ''  # 升序
+                order = 'last_update_time'
             elif method == '最近创建':
-                order['orderby_table'] = 'SpaceExercises'
-                order['orderby_object'] = 'create_time'
-                order['orderby'] = '-'  # 降序
+                order = '-create_time'
             elif method == '最早创建':
-                order['orderby_table'] = 'SpaceExercises'
-                order['orderby_object'] = 'create_time'
-                order['orderby'] = ''  # 升序
+                order = 'create_time'
             else:
                 return JsonResponse({
                     'errno': '401',
@@ -2808,25 +2775,17 @@ def search(request):
 
             exercises = SpaceExercises.objects.filter(Q(type=text)
                                                       | Q(content__icontains=text)).order_by(
-                order['orderby'] +
-                order['orderby_table'] + '__' +
-                order['orderby_object']
+                order
             )
             exercises_need = []
 
-            for exercise in exercises:
-                studyspace = StudySpaces.objects.get(id=exercise.space_id)
-                user_act = {
-                    "id": exercise.id,
-                    "space_name": studyspace.space_name,
-                    "content": exercise.content,
-                    "create_time": exercise.create_time,
-                    "from_space_id": studyspace.space_id,
-                    "difficulty": exercise.difficulty,
-                    "type": exercise.type,
-                    "uid": studyspace.creator_id,
-                }
-                exercises_need.append(user_act)
+            for each in exercises:
+                each_dict = model_to_dict(each, exclude=['space_picture'])
+                each_dict['likes'] = data.Likes.objects.filter(liked_id=each_dict['id'], liked_type='习题').count()
+                each_dict['follows'] = data.Follows.objects.filter(followed_id=each_dict['id'],
+                                                                   followed_type='习题').count()
+                exercises_need.append(each)
+            exercises_need = order_query_list(exercises_need, method)
             return JsonResponse({'error': 1, 'msg': '搜索习题成功', 'data': exercises_need})
         elif types == 'users':
             users = User.objects.filter(username__icontains=text)

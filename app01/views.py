@@ -2479,6 +2479,7 @@ def get_answers(request, uid):
                 "create_time": answer.create_time,
                 "from_space_id": studyspace.id,
                 "element_id": answer.element_id,
+                "type": answer.comment_type,
                 "uid": uid,
             }
             answers_need.append(user_act)

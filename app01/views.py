@@ -1798,7 +1798,7 @@ def space_exercises_create(request, space_id):
         time_now = get_time_now()
         if ret is not None:
             return ret
-        new_question = data.SpaceQuestions(
+        new_question = data.SpaceExercises(
             space_id=space,
             user_id=get_user_by_id(ses['user_id']),
             content=content,
@@ -2794,7 +2794,7 @@ def search(request):
                     'errno': '401',
                     'msg': 'POST参数order不合法'})
             studyspaces = StudySpaces.objects.filter(Q(space_introduction__icontains=text)
-                                                     | Q(space_name__icontains=text)).order_by(order)
+                                                     ).order_by(order)
             studyspaces_need = []
             for each in studyspaces:
                 each_dict = model_to_dict(each, exclude=['space_picture'])
@@ -2854,7 +2854,7 @@ def search(request):
                     'msg': 'POST参数order不合法'})
 
             questions = SpaceQuestions.objects.filter(Q(title__icontains=text)
-                                                      | Q(content__icontains=text)).order_by(order)
+                                                      ).order_by(order)
             questions_need = []
             for each in questions:
                 each_dict = model_to_dict(each, exclude=['space_picture'])
@@ -2884,7 +2884,7 @@ def search(request):
                     'msg': 'POST参数order不合法'})
 
             exercises = SpaceExercises.objects.filter(Q(type=text)
-                                                      | Q(content__icontains=text)).order_by(
+                                                      ).order_by(
                 order
             )
             exercises_need = []

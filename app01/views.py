@@ -2347,6 +2347,7 @@ def get_admin_spaces(request, uid):
                 "create_time": studyspace.create_time,
                 "space_introduction": studyspace.space_introduction,
                 "space_index": studyspace.space_index,
+                "creator_name": studyspace.creator_id.username
                 # "space_picture": studyspace.space_picture
             }
             studyspaces_need.append(user_act)
@@ -2358,6 +2359,7 @@ def get_admin_spaces(request, uid):
                 "create_time": studyspace.create_time,
                 "space_introduction": studyspace.space_introduction,
                 "space_index": studyspace.space_index,
+                "creator_name": studyspace.creator_id.username
                 # "space_picture": studyspace.space_picture
             }
             studyspaces_need.append(user_act)

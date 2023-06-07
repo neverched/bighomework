@@ -2291,7 +2291,7 @@ def get_resources(request, uid):
         except Exception:
             return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
 
-        resources = SpaceResources.objects.filter(user_id=uid)
+        resources = SpaceResources.objects.filter(user_id=follow)
         resources_need = []
 
         for resource in resources:
@@ -2316,7 +2316,7 @@ def get_questions(request, uid):
             follow = User.objects.get(id=uid)
         except:
             return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
-        questions = SpaceQuestions.objects.filter(user_id=uid)
+        questions = SpaceQuestions.objects.filter(user_id=follow)
 
         questions_need = []
 
@@ -2343,7 +2343,7 @@ def get_answers(request, uid):
             follow = User.objects.get(id=uid)
         except:
             return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
-        answers = SpaceComments.objects.filter(user_id=uid, comment_type='answer')
+        answers = SpaceComments.objects.filter(user_id=follow)
 
         answers_need = []
 
@@ -2370,7 +2370,7 @@ def get_exercises(request, uid):
             follow = User.objects.get(id=uid)
         except:
             return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
-        exercises = SpaceExercises.objects.filter(user_id=uid)
+        exercises = SpaceExercises.objects.filter(user_id=follow)
 
         exercises_need = []
 

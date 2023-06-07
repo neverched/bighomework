@@ -2944,6 +2944,7 @@ def get_file_by_id(request, resource_id):
         url = 'media/' + resource.file.name
         try:
             response = FileResponse(open(url, 'rb'))
+            response['file_name'] = resource.file.name
             response['content_type'] = "application/octet-stream"
             response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(url)
             return response

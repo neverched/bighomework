@@ -178,7 +178,7 @@ def like_follow_space(space, ses, is_like, is_follow, ret_dict, query_list, tota
             'errno': '200',
             'msg': '点赞/取消点赞成功',
             'data': ret_dict,
-            'list': query_list[page * 10 - 10:page * 10 - 1],
+            'list': query_list[page * 10 - 10:page * 10],
             'total': total
         })
 
@@ -198,7 +198,7 @@ def like_follow_space(space, ses, is_like, is_follow, ret_dict, query_list, tota
             'errno': '200',
             'msg': '收藏/取消收藏成功',
             'data': ret_dict,
-            'list': query_list[page * 10 - 10:page * 10 - 1],
+            'list': query_list[page * 10 - 10:page * 10],
             'total': total
         })
     else:
@@ -206,7 +206,7 @@ def like_follow_space(space, ses, is_like, is_follow, ret_dict, query_list, tota
             'errno': '200',
             'msg': '查询成功',
             'data': ret_dict,
-            'list': query_list[page * 10 - 10:page * 10 - 1],
+            'list': query_list[page * 10 - 10:page * 10],
             'total': total
         })
 
@@ -365,7 +365,7 @@ def spaces_index(request):
             return JsonResponse({
                 'errno': '200',
                 'msg': '查询全部空间成功',
-                'data': query_list[page * 10 - 10:page * 10 - 1],
+                'data': query_list[page * 10 - 10:page * 10],
                 'total': total,
             })
 
@@ -387,7 +387,7 @@ def spaces_index(request):
             return JsonResponse({
                 'errno': '201',
                 'msg': '查询最近访问成功',
-                'data': query_list[page * 10 - 10:page * 10 - 1],
+                'data': query_list[page * 10 - 10:page * 10],
                 'total': total,
             })
 
@@ -409,7 +409,7 @@ def spaces_index(request):
             return JsonResponse({
                 'errno': '202',
                 'msg': '查询关注空间成功',
-                'data': query_list[page * 10 - 10:page * 10 - 1],
+                'data': query_list[page * 10 - 10:page * 10],
                 'total': total,
             })
 
@@ -429,7 +429,7 @@ def spaces_index(request):
             return JsonResponse({
                 'errno': '203',
                 'msg': '查询管理空间成功',
-                'data': query_list[page * 10 - 10:page * 10 - 1],
+                'data': query_list[page * 10 - 10:page * 10],
                 'total': total,
             })
 
@@ -688,6 +688,7 @@ def space_resources_index(request, space_id):
         resources_set = data.SpaceResources.objects.filter(space_id=space).order_by(order)
         total = resources_set.count()
         for each in resources_set:
+            print(each.file)
             each_dict = model_to_dict(each, exclude=['file'])
             each_dict['title'] = each_dict['resource_name']
             each_dict['user_name'] = get_user_by_id(each_dict['user_id']).username
@@ -925,7 +926,7 @@ def space_notices_index(request, space_id):
             'errno': '200',
             'msg': '查询成功',
             'data': ret_dict,
-            'list': query_list[page * 10 - 10:page * 10 - 1],
+            'list': query_list[page * 10 - 10:page * 10],
             'total': total
         })
 
@@ -2782,3 +2783,5 @@ def search(request):
         else:
             return JsonResponse({'error': 1016, 'msg': "搜索方式错误"})
     return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+

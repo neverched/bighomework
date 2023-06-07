@@ -1797,7 +1797,7 @@ def space_exercises_create(request, space_id):
         ret = exist_check(exercise_type, content, difficulty, answer)
         time_now = get_time_now()
         if ret is not None:
-           return ret
+            return ret
         new_question = data.SpaceExercises(
             space_id=space,
             user_id=get_user_by_id(ses['user_id']),
@@ -2347,6 +2347,7 @@ def get_admin_spaces(request, uid):
                 "create_time": studyspace.create_time,
                 "space_introduction": studyspace.space_introduction,
                 "space_index": studyspace.space_index,
+                "creator_name": studyspace.creator_id.username
                 # "space_picture": studyspace.space_picture
             }
             studyspaces_need.append(user_act)
@@ -2358,6 +2359,7 @@ def get_admin_spaces(request, uid):
                 "create_time": studyspace.create_time,
                 "space_introduction": studyspace.space_introduction,
                 "space_index": studyspace.space_index,
+                "creator_name": studyspace.creator_id.username
                 # "space_picture": studyspace.space_picture
             }
             studyspaces_need.append(user_act)
@@ -2683,7 +2685,9 @@ def get_followings(request, uid):
                 "uid": user.id,
                 "username": user.username,
                 "fans_cnt": fans_cnt,
-                "like_cnt": user.like
+                "like_cnt": user.like,
+                "gender": user.gender,
+                "address": user.destination
             }
             user_need.append(user_act)
 
@@ -2709,7 +2713,9 @@ def get_fans(request, uid):
                 "uid": user.id,
                 "username": user.username,
                 "fans_cnt": user.followers,
-                "like_cnt": user.like
+                "like_cnt": user.like,
+                "gender": user.gender,
+                "address": user.destination
             }
             fan_need.append(user_act)
         return JsonResponse({'error': 1, 'msg': '获取关注列表成功', 'data': fan_need})
@@ -2794,7 +2800,7 @@ def search(request):
                     'errno': '401',
                     'msg': 'POST参数order不合法'})
             studyspaces = StudySpaces.objects.filter(Q(space_introduction__icontains=text)
-                                                     | Q(space_name__icontains=text)).order_by(order)
+                                                     ).order_by(order)
             studyspaces_need = []
             for each in studyspaces:
                 each_dict = model_to_dict(each, exclude=['space_picture'])
@@ -2854,14 +2860,14 @@ def search(request):
                     'msg': 'POST参数order不合法'})
 
             questions = SpaceQuestions.objects.filter(Q(title__icontains=text)
-                                                      | Q(content__icontains=text)).order_by(order)
+                                                      ).order_by(order)
             questions_need = []
             for each in questions:
                 each_dict = model_to_dict(each, exclude=['space_picture'])
                 each_dict['likes'] = data.Likes.objects.filter(liked_id=each_dict['id'], liked_type='讨论').count()
                 each_dict['follows'] = data.Follows.objects.filter(followed_id=each_dict['id'],
                                                                    followed_type='讨论').count()
-                questions_need.append(each)
+                questions_need.append(each_dict)
             questions_need = order_query_list(questions_need, method)
             return JsonResponse({'error': 1, 'msg': '搜索讨论成功', 'data': questions_need})
 
@@ -2884,7 +2890,7 @@ def search(request):
                     'msg': 'POST参数order不合法'})
 
             exercises = SpaceExercises.objects.filter(Q(type=text)
-                                                      | Q(content__icontains=text)).order_by(
+                                                      ).order_by(
                 order
             )
             exercises_need = []
@@ -2894,7 +2900,7 @@ def search(request):
                 each_dict['likes'] = data.Likes.objects.filter(liked_id=each_dict['id'], liked_type='习题').count()
                 each_dict['follows'] = data.Follows.objects.filter(followed_id=each_dict['id'],
                                                                    followed_type='习题').count()
-                exercises_need.append(each)
+                exercises_need.append(each_dict)
             exercises_need = order_query_list(exercises_need, method)
             return JsonResponse({'error': 1, 'msg': '搜索习题成功', 'data': exercises_need})
         elif types == 'users':

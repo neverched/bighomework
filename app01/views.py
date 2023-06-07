@@ -2837,6 +2837,7 @@ def search(request):
                 each_dict['likes'] = data.Likes.objects.filter(liked_id=each_dict['id'], liked_type='资源').count()
                 each_dict['follows'] = data.Follows.objects.filter(followed_id=each_dict['id'],
                                                                    followed_type='资源').count()
+                each_dict['title'] = each_dict['resource_name']
                 each_dict['creator_name'] = each.user_id.username
                 resources_need.append(each_dict)
             resources_need = order_query_list(resources_need, method)
@@ -2902,6 +2903,7 @@ def search(request):
                 each_dict['likes'] = data.Likes.objects.filter(liked_id=each_dict['id'], liked_type='习题').count()
                 each_dict['follows'] = data.Follows.objects.filter(followed_id=each_dict['id'],
                                                                    followed_type='习题').count()
+                each_dict['title'] = each_dict['type']
                 each_dict['creator_name'] = each.user_id.username
                 exercises_need.append(each_dict)
             exercises_need = order_query_list(exercises_need, method)
@@ -2945,9 +2947,22 @@ def get_file_by_id(request, resource_id):
                 'msg': '未找到对应资源'
             })
         print(resource.file.name)
+        get_name = request.POST.get('get_name')
+        if get_name:
+            return JsonResponse({
+                'errno': '200',
+                'msg': '获取对应资源文件名成功',
+                'name': resource.file.name
+            })
+        if resource.file.name == "":
+            return JsonResponse({
+                'errno': '200',
+                'msg': '对应资源没有文件'
+            })
         url = 'media/' + resource.file.name
         try:
             response = FileResponse(open(url, 'rb'))
+            response['file_name'] = resource.file.name
             response['content_type'] = "application/octet-stream"
             response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(url)
             return response

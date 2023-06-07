@@ -1797,8 +1797,8 @@ def space_exercises_create(request, space_id):
         ret = exist_check(exercise_type, content, difficulty, answer)
         time_now = get_time_now()
         if ret is not None:
-            return ret
-        new_question = data.SpaceQuestions(
+           return ret
+        new_question = data.SpaceExercises(
             space_id=space,
             user_id=get_user_by_id(ses['user_id']),
             content=content,
@@ -2895,6 +2895,11 @@ def get_file_by_id(request, resource_id):
                 'msg': '未找到对应资源'
             })
         print(resource.file.name)
+        if resource.file.name == "":
+            return JsonResponse({
+                'errno': '200',
+                'msg': '对应资源没有文件'
+            })
         url = 'media/' + resource.file.name
         try:
             response = FileResponse(open(url, 'rb'))

@@ -837,7 +837,8 @@ def space_questions_index(request, space_id):
             each_dict['user_name'] = get_user_by_id(each_dict['user_id']).username
             each_dict['likes'] = data.Likes.objects.filter(liked_type='讨论', liked_id=each_dict['id']).count()
             each_dict['comments'] = len(get_comments_list(space, each_dict['id'], '讨论'))
-            each_dict['follows'] = data.Follows.objects.filter(followed_type='讨论', followed_id=each_dict['id']).count()
+            each_dict['follows'] = data.Follows.objects.filter(followed_type='讨论',
+                                                               followed_id=each_dict['id']).count()
             query_list.append(each_dict)
         query_list = order_query_list(query_list, method)
 
@@ -888,7 +889,8 @@ def space_exercises_index(request, space_id):
             each_dict['user_name'] = get_user_by_id(each_dict['user_id']).username
             each_dict['likes'] = data.Likes.objects.filter(liked_type='习题', liked_id=each_dict['id']).count()
             each_dict['comments'] = len(get_comments_list(space, each_dict['id'], '习题'))
-            each_dict['follows'] = data.Follows.objects.filter(followed_type='习题', followed_id=each_dict['id']).count()
+            each_dict['follows'] = data.Follows.objects.filter(followed_type='习题',
+                                                               followed_id=each_dict['id']).count()
             query_list.append(each_dict)
 
         is_like = request.POST.get('is_like')
@@ -2632,7 +2634,7 @@ def get_followings(request, uid):
             user = User.objects.get(id=follow.followed_id)
             # print(user.id)
             fans_cnt = Follows.objects.filter(following_id=user, followed_type='people').count()
-            #likes_cnt =
+            # likes_cnt =
             user_act = {
                 "uid": user.id,
                 "username": user.username,
@@ -2867,6 +2869,16 @@ def search(request):
     return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
 
 
+@csrf_exempt
+def give_uid(request):
+    if request.method == 'GET':
+        try:
+            user_id = request.session['uid']
+        except:
+            return JsonResponse({'error': 1014, 'msg': "没有登录"})
+        return JsonResponse({'error': 1, 'msg': '获取成功', 'data': user_id})
+    return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
 
 @csrf_exempt
 def get_file_by_id(request, resource_id):
@@ -2880,7 +2892,7 @@ def get_file_by_id(request, resource_id):
                 'msg': '未找到对应资源'
             })
         print(resource.file.name)
-        url = 'media/'+resource.file.name
+        url = 'media/' + resource.file.name
         try:
             response = FileResponse(open(url, 'rb'))
             response['content_type'] = "application/octet-stream"
@@ -2894,6 +2906,7 @@ def get_file_by_id(request, resource_id):
         return JsonResponse({
             'errno': '405',
             'msg': '请求方式错误'})
+
 
 def activities_add(user_id, create_time, objects_type, t_id, s_id, contents):
     user = User.objects.get(id=user_id)
@@ -2910,4 +2923,3 @@ def activities_add(user_id, create_time, objects_type, t_id, s_id, contents):
 
     new_activities.save()
     return 0
-

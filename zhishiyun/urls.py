@@ -74,5 +74,6 @@ urlpatterns = [
     path('user/<uid>/follow', views.follow_people),
     path('file/<resource_id>', views.get_file_by_id),
     # path('postarticle', postarticle),
-     path('search',views.search)
+     path('search',views.search),
+    path('give',views.give_uid)
 ]

@@ -828,7 +828,7 @@ def space_questions_index(request, space_id):
             each_dict['user_name'] = get_user_by_id(each_dict['user_id']).username
             each_dict['likes'] = data.Likes.objects.filter(liked_type='讨论', liked_id=each_dict['id']).count()
             each_dict['comments'] = len(get_comments_list(space, each_dict['id'], '讨论'))
-            each_dict['follows'] = data.Follows.objects.filter(liked_type='讨论', liked_id=each_dict['id']).count()
+            each_dict['follows'] = data.Follows.objects.filter(followed_type='讨论', followed_id=each_dict['id']).count()
             query_list.append(each_dict)
         query_list = order_query_list(query_list, method)
 

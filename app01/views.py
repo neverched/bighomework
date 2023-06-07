@@ -2942,6 +2942,13 @@ def get_file_by_id(request, resource_id):
                 'msg': '未找到对应资源'
             })
         print(resource.file.name)
+        get_name = request.POST.get('get_name')
+        if get_name:
+            return JsonResponse({
+                'errno': '200',
+                'msg': '获取对应资源文件名成功',
+                'name': resource.file.name
+            })
         if resource.file.name == "":
             return JsonResponse({
                 'errno': '200',

@@ -2469,6 +2469,8 @@ def get_collects_resources(request, uid):
                 "create_time": resource.create_time,
                 "file_name": resource.resource_name,
                 "from_space_id": studyspace.id,
+                "creator_name": resource.user_id.username,
+                "creator_id": resource.user_id.id,
             }
             resources_need.append(user_act)
         return JsonResponse({'error': 1, 'msg': '获取资源成功', 'data': resources_need})
@@ -2505,6 +2507,8 @@ def get_collects_questions(request, uid):
                 "create_time": question.create_time,
                 "from_space_id": studyspace.id,
                 "uid": uid,
+                "creator_name": question.user_id.username,
+                "creator_id": question.user_id.id
             }
             questions_need.append(user_act)
         return JsonResponse({'error': 1, 'msg': '获取提问成功', 'data': questions_need})
@@ -2540,6 +2544,8 @@ def get_collects_answers(request, uid):
                 "create_time": answer.create_time,
                 "from_space_id": studyspace.id,
                 "uid": uid,
+                "creator_name": answer.user_id.username,
+                "creator_id": answer.user_id.id
             }
             answers_need.append(user_act)
         return JsonResponse({'error': 1, 'msg': '获取回答成功', 'data': answers_need})
@@ -2577,6 +2583,8 @@ def get_collects_exercises(request, uid):
                 "difficulty": exercise.difficulty,
                 "type": exercise.type,
                 "uid": uid,
+                "creator_name": exercise.user_id.username,
+                "creator_id": exercise.user_id.id
             }
             exercises_need.append(user_act)
         return JsonResponse({'error': 1, 'msg': '获取习题成功', 'data': exercises_need})

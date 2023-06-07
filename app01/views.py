@@ -2002,6 +2002,7 @@ def register(request):
         if email_exist:
             return JsonResponse({'error': 1003, 'msg': '邮箱已存在!'})
         # 检查密码，要求：8-18字符，英文字母+数字
+        # print(password1)
         if not re.match('^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,18}$', password1):
             return JsonResponse({'error': 1004, 'msg': '密码不合格!'})
 
@@ -2290,7 +2291,7 @@ def get_follow_spaces(request, uid):
                 "create_time": studyspace.create_time,
                 "space_introduction": studyspace.space_introduction,
                 "space_index": studyspace.space_index,
-                "space_picture": studyspace.space_picture
+                # "space_picture": studyspace.space_picture
             }
             studyspaces_need.append(user_act)
         return JsonResponse({'error': 1, 'msg': '获取关注空间成功', 'data': studyspaces_need})
@@ -2310,12 +2311,12 @@ def get_resources(request, uid):
         resources_need = []
 
         for resource in resources:
-            studyspace = StudySpaces.objects.get(id=resource.space_id)
+            studyspace = StudySpaces.objects.get(id=resource.space_id.id)
             user_act = {
                 "id": resource.id,
                 "space_name": studyspace.space_name,
                 "create_time": resource.create_time,
-                "file_name": resource.file_name,
+                "file_name": resource.resource_name,
                 "from_space_id": studyspace.id,
             }
             resources_need.append(user_act)

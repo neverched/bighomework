@@ -2238,6 +2238,10 @@ def get_admin_spaces(request, uid):
         except:
             return JsonResponse({'error': 1014, 'msg': "没有相应用户"})
         studyspaces = StudySpaces.objects.filter(creator_id=get_user_by_id(uid))
+        studymembers = SpaceMembers.objects.filter(is_admin=1,user_id=get_user_by_id(uid))
+        studyspaces2 = []
+        for studymember in studymembers:
+            studyspaces2.append(studymember.space_id)
 
         studyspaces_need = []
         for studyspace in studyspaces:
@@ -2247,7 +2251,18 @@ def get_admin_spaces(request, uid):
                 "create_time": studyspace.create_time,
                 "space_introduction": studyspace.space_introduction,
                 "space_index": studyspace.space_index,
-                "space_picture": studyspace.space_picture
+                # "space_picture": studyspace.space_picture
+            }
+            studyspaces_need.append(user_act)
+
+        for studyspace in studyspaces2:
+            user_act = {
+                "id": studyspace.id,
+                "space_name": studyspace.space_name,
+                "create_time": studyspace.create_time,
+                "space_introduction": studyspace.space_introduction,
+                "space_index": studyspace.space_index,
+                # "space_picture": studyspace.space_picture
             }
             studyspaces_need.append(user_act)
         return JsonResponse({'error': 1, 'msg': '获取管理空间成功', 'data': studyspaces_need})

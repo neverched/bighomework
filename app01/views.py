@@ -2108,8 +2108,14 @@ def login(request):
 def login_confirm(request):
     if request.method == 'POST':
         email = request.POST.get('email')  # 获取请求数据
+        try:
+            # print(email)
+            new_user = User.objects.get(email=email)
+        except:
+            return JsonResponse({'error': 1011, 'msg': "没有此用户"})
 
-        new_user = User.objects.get(email=email)
+        if request.session.get('uid') == new_user.id:
+            return JsonResponse({'error': 1009, 'msg': "已经登录"})
         code = make_confirm_string(new_user)
         try:
             send_email_confirm(email, code)

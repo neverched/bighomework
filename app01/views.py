@@ -1502,8 +1502,10 @@ def space_resources_create(request, space_id):
 
         resource_name = request.POST.get('resource_name')
         introduction = request.POST.get('introduction')
+        if introduction is None:
+            introduction = ""
         file = request.FILES.get('file')
-        ret = exist_check(resource_name, introduction, file)
+        ret = exist_check(resource_name)
         time_now = get_time_now()
         if ret is not None:
             return ret
@@ -2793,8 +2795,9 @@ def search(request):
 def get_file_by_id(request, resource_id):
     if request.method == 'POST':
         ses = request.session
-        resource = data.SpaceResources.objects.get(id=resource_id)
-        if resource is None:
+        try:
+            resource = data.SpaceResources.objects.get(id=resource_id)
+        except:
             return JsonResponse({
                 'errno': '404',
                 'msg': '未找到对应资源'

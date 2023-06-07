@@ -152,7 +152,7 @@ class SpaceExercises(models.Model):
     space_id = models.ForeignKey('StudySpaces', on_delete=models.CASCADE)
     user_id = models.ForeignKey('User', on_delete=models.CASCADE)
     content = models.CharField(max_length=100)  # 题目
-    type = models.CharField(max_length=10)  # 题目类型
+    type = models.CharField(max_length=100)  # 题目标题
     difficulty = models.CharField(max_length=10)  # 题目难度
     answer = models.CharField(max_length=100)
     create_time = models.DateTimeField()

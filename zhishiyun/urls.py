@@ -63,6 +63,7 @@ urlpatterns = [
     path('user/<uid>/followspaces', views.get_follow_spaces),
     path('user/<uid>/resources', views.get_resources),
     path('user/<uid>/questions', views.get_questions),
+    path('user/<uid>/answers', views.get_answers),
     path('user/<uid>/exercises', views.get_exercises),
     path('user/<uid>/collects/resources', views.get_collects_resources),
     path('user/<uid>/collects/questions', views.get_collects_questions),
@@ -72,5 +73,5 @@ urlpatterns = [
     path('user/<uid>/fans', views.get_fans),
     path('user/<uid>/follow', views.follow_people),
     # path('postarticle', postarticle),
-    # path('search',search)
+     path('search',views.search)
 ]

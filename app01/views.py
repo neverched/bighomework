@@ -2241,6 +2241,41 @@ def edit_info(request, uid):
 
 
 @csrf_exempt
+def get_resent(request, uid):
+    if request.method == 'GET':
+        uid = int(uid)
+        uid = get_user_by_id(uid)
+        activities = Activities.objects.filter(hosts=uid)
+
+        activities_need = []
+        for activity in activities:
+            title = '活动类型错误'
+            if activity.type == '资源':
+                res = SpaceResources.objects.get(id=activity.t_id)
+                title = res.resource_name
+            elif activity.type == '讨论':
+                res = SpaceQuestions.objects.get(id=activity.t_id)
+                title = res.title
+            elif activity.type == '评论':
+                res = SpaceComments.objects.get(id=activity.t_id)
+                title = res.content
+            elif activity.type == '习题':
+                res = SpaceExercises.objects.get(id=activity.t_id)
+                title = res.type
+            else:
+                continue
+            user_act = {
+                "type": activity.type,
+                "create_time": activity.create_time,
+                "t_id": activity.t_id,
+                "title": title,
+            }
+            activities_need.append(user_act)
+        return JsonResponse({'error': 1, 'msg': '获取最近创作成功', 'data': activities_need})
+    return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
+
+
+@csrf_exempt
 def get_activities(request):
     if request.method == 'GET':
         uid = request.session.get('uid')

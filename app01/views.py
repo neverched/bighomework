@@ -2241,12 +2241,38 @@ def get_activities(request):
 
         activities_need = []
         for activity in activities:
+            space_name = '不属于空间'
+            title = '活动类型错误'
+            if activity.type == '资源':
+                res = SpaceResources.objects.get(id=activity.t_id)
+                title = res.resource_name
+                space_name = res.space_id.space_name
+            elif activity.type == '学习空间':
+                spa = StudySpaces.objects.get(id=activity.t_id)
+                title = spa.space_name
+            elif activity.type == '用户':
+                user = User.objects.get(id=activity.t_id)
+                title = user.username
+            elif activity.type == '讨论':
+                res = SpaceQuestions.objects.get(id=activity.t_id)
+                title = res.title
+                space_name = res.space_id.space_name
+            elif activity.type == '评论':
+                res = SpaceComments.objects.get(id=activity.t_id)
+                title = res.content
+                space_name = res.space_id.space_name
+            elif activity.type == '习题':
+                res = SpaceExercises.objects.get(id=activity.t_id)
+                title = res.type
+                space_name = res.space_id.space_name
             user_act = {
                 "id": activity.id,
                 "type": activity.type,
                 "create_time": activity.create_time,
                 "programs": activity.programs,
                 "t_id": activity.t_id,
+                "title": title,
+                "space_name": space_name,
             }
             activities_need.append(user_act)
         return JsonResponse({'error': 1, 'msg': '获取动态成功', 'data': activities_need})

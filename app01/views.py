@@ -1531,7 +1531,7 @@ def space_resources_create(request, space_id):
             last_update_time=time_now
         )
         new_resource.save()
-        activities_add(ses['user_id'], 0, "资源", space.id, new_resource.id, '创建了资源')
+        activities_add(ses['user_id'], 0, "资源", new_resource.id, space.id, '创建了资源')
         return JsonResponse({
             'errno': '200',
             'msg': '创建元素成功',
@@ -1659,7 +1659,7 @@ def space_questions_create(request, space_id):
             last_update_time=time_now
         )
         new_question.save()
-        activities_add(ses['user_id'], 0, "讨论", space.id, new_question.id, '创建了讨论')
+        activities_add(ses['user_id'], 0, "讨论", new_question.id, space.id, '创建了讨论')
         return JsonResponse({
             'errno': '200',
             'msg': '创建元素成功',
@@ -1809,7 +1809,7 @@ def space_exercises_create(request, space_id):
             last_update_time=time_now
         )
         new_question.save()
-        activities_add(ses['user_id'], 0, "练习", space.id, new_question.id, '创建了练习')
+        activities_add(ses['user_id'], 0, "练习", new_question.id, space.id, '创建了练习')
         return JsonResponse({
             'errno': '200',
             'msg': '创建元素成功',
@@ -2265,7 +2265,7 @@ def get_resent(request, uid):
             else:
                 continue
             user_act = {
-                "type": activity.type,
+                "type": cn_to_eng(activity.type),
                 "create_time": activity.create_time,
                 "t_id": activity.t_id,
                 "title": title,
@@ -2300,6 +2300,7 @@ def get_activities(request):
                 user = User.objects.get(id=activity.t_id)
                 title = user.username
             elif activity.type == '讨论':
+                # print(activity.t_id)
                 res = SpaceQuestions.objects.get(id=activity.t_id)
                 title = res.title
                 space_name = res.space_id.space_name
@@ -2313,7 +2314,7 @@ def get_activities(request):
                 space_name = res.space_id.space_name
             user_act = {
                 "id": activity.id,
-                "type": activity.type,
+                "type": cn_to_eng(activity.type),
                 "create_time": activity.create_time,
                 "programs": activity.programs,
                 "t_id": activity.t_id,
@@ -2479,9 +2480,10 @@ def get_answers(request, uid):
                 "create_time": answer.create_time,
                 "from_space_id": studyspace.id,
                 "element_id": answer.element_id,
-                "type": answer.comment_type,
+                "type": num_to_eng(answer.comment_type),
                 "uid": uid,
             }
+            # print(num_to_eng(answer.comment_type))
             answers_need.append(user_act)
         return JsonResponse({'error': 1, 'msg': '获取回答成功', 'data': answers_need})
     return JsonResponse({'error': 1001, 'msg': "请求方式错误"})
@@ -2992,3 +2994,29 @@ def activities_add(user_id, create_time, objects_type, t_id, s_id, contents):
 
     new_activities.save()
     return 0
+
+
+def cn_to_eng(a_type):
+    if a_type == '资源':
+        return 'resources'
+    if a_type == '习题':
+        return 'exercises'
+    if a_type == '讨论':
+        return 'questions'
+    if a_type == '用户':
+        return 'users'
+    if a_type == '评论':
+        return 'comments'
+    if a_type == '学习空间':
+        return 'spaces'
+    return a_type
+
+
+def num_to_eng(eng):
+    if eng == 1:
+        return 'resources'
+    if eng == 3:
+        return 'exercises'
+    if eng == 2:
+        return 'questions'
+    return eng

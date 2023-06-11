@@ -15,7 +15,7 @@
           <el-row>
             <el-text style="color: black; font-size: large; font-weight: bold;">{{ info.name }}</el-text>
             <span class="my-space"></span>
-            <el-tag v-if="info.gender" type="info" class="mx-1" effect="light" round>
+            <el-tag type="info" class="mx-1" effect="light" round>
               <el-icon class="info-cion" v-if="info.gender == 0" color="#409EFC">
                 <Male />
               </el-icon>
